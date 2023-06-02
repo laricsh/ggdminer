@@ -1,0 +1,42 @@
+{
+    "freqThreshold": 4000,
+    "labelCode":
+    [
+        {
+            "label": "Article",
+            "code": 0
+        }
+    ],
+    "minThresholdPerDataType":
+    [
+        {
+            "dataType": "string",
+            "minThreshold": 5.0,
+            "minDifference": 2.0
+        },
+        {
+            "dataType": "number",
+            "minThreshold": 10.0,
+            "minDifference": 5.0
+        },
+        {
+            "dataType": "boolean",
+            "minThreshold": 0.0,
+            "minDifference": 0.0
+        }
+    ],
+    "shortDistance": 0,
+    "confidence": 0.7,
+    "diversityThreshold": 0.5,
+    "kedge": 2,
+    "sample": false,
+    "sampleRate": 0.0,
+    "preprocess": "schema",
+    "maxHops": 3,
+    "kgraph": 5,
+    "schemaSim": 0.75,
+    "minCoverage": 0.0,
+    "minDiversity": 0.0,
+    "maxMappings": 3,
+    "maxCombination": 7
+}

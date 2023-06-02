@@ -1,0 +1,27 @@
+{
+    "graphName": "graph-name",
+    "connectionPath": "path.lg",
+    "path": "path-json",
+    "vertexLabels":
+    [
+        "Vertices"
+    ],
+    "edgeLabels":
+    [
+        "Edges"
+    ],
+    "dataTypes":
+    [
+        {
+            "label": "Vertex",
+            "data":
+            {
+                "name": "string",
+                "source": "string",
+                "id": "number",
+                "labels": "string",
+                "previousId": "number"
+            }
+        }
+    ]
+}
