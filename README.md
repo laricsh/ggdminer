@@ -1,4 +1,4 @@
-# GGDMiner - Framework for Dsicovering Graph Generating Dependencies
+# GGDMiner - Framework for Discovering Graph Generating Dependencies
 
 ## Install Dependencies for running GGDMiner
 
