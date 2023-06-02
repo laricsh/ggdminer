@@ -1,0 +1,13 @@
+----Source Graph Pattern:----
+Node:0 Label:DBLPAuthors
+Node:1 Label:DBLPOrganizations
+Edge: A Label:DBLPFrom Source:0 Target:1
+---Source Constraints-----
+--------Target Graph Pattern--------
+Node:1_t Label:DBLPOrganizations
+Node:1 Label:DBLPOrganizations
+Node:0 Label:DBLPAuthors
+Edge: A Label:DBLPFrom Source:0 Target:1
+Edge: A_t Label:DBLPFrom Source:0 Target:1_t
+------Target Cons-----
+############# - CONFIDENCE VALUE: 1.0 - ######################### - NUMBER OF SOURCE MATCHES: 0 - ######################### - NUMBER OF TARGET MATCHES: 0 - ############
