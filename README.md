@@ -1,3 +1,5 @@
+# GGDMiner - Framework for Dsicovering Graph Generating Dependencies
+
 ## Install Dependencies for running GGDMiner
 
 1. WS4J and JAWJAW (https://github.com/mhjabreel/ws4j/tree/master/edu.cmu.lti.ws4j)
