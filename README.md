@@ -32,3 +32,11 @@
 ## Config Miner
 
 1. Parameters for the miner --> see confiminer_example.json
+
+## Souce code
+This project uses the following projects: 
+1. Grami (https://github.com/ehab-abdelhamid/GraMi)
+2. Java Graphs (https://github.com/tdebatty/java-graphs)
+3. Edit Distance Clusterer (https://github.com/lispc/EditDistanceClusterer)
+
+All source codes used from these project were annotated.
