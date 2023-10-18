@@ -1,6 +1,6 @@
-package main.java.preProcess;
+package preProcess;
 
-import main.java.minerDataStructures.AttributePair;
+import minerDataStructures.AttributePair;
 
 import java.util.List;
 

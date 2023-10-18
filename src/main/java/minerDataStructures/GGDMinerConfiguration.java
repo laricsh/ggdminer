@@ -1,4 +1,4 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +26,10 @@ public class GGDMinerConfiguration {
     public Double minCoverage;
     public Double minDiversity;
     public Integer maxMappings;
+    public Integer maxSource;
     public Integer maxCombination;
 
-    public GGDMinerConfiguration() throws IOException {
+    public GGDMinerConfiguration()  {
     }
 
     public void loadFromFile(String filePath) throws IOException {
@@ -55,6 +56,7 @@ public class GGDMinerConfiguration {
         this.minDiversity = config.minDiversity;
         this.maxMappings = config.maxMappings;
         this.maxCombination = config.maxCombination;
+        this.maxSource = config.maxSource;
     }
 
     public void printJsonFile(String file) throws IOException {

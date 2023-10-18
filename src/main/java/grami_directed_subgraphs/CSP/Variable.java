@@ -17,13 +17,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.CSP;
+package grami_directed_subgraphs.CSP;
 
 
-import main.java.ggdSearch.GGDSearcher;
-import main.java.grami_directed_subgraphs.dataStructures.myNode;
-import main.java.grami_directed_subgraphs.search.Searcher;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import ggdSearch.GGDSearcher;
+import grami_directed_subgraphs.dataStructures.myNode;
+import grami_directed_subgraphs.search.Searcher;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,7 +54,7 @@ public class Variable
 		this.distanceConstrainedBy = distanceConstrainedBy;
 	}
 	
-	public Variable(int ID, int label,HashMap<Integer, myNode> list,ArrayList<MyPair<Integer, Double>> cons,ArrayList<MyPair<Integer, Double>> consBy) 
+	public Variable(int ID, int label, HashMap<Integer, myNode> list, ArrayList<MyPair<Integer, Double>> cons, ArrayList<MyPair<Integer, Double>> consBy)
 	{
 		this.list=list;
 		this.label=label;

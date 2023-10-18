@@ -1,6 +1,6 @@
-package main.java.preProcess.EditDistanceJoiner;
+package preProcess.EditDistanceJoiner;
 
-import main.java.minerDataStructures.Tuple;
+import minerDataStructures.Tuple;
 
 import java.io.Serializable;
 import java.util.*;

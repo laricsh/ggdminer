@@ -1,4 +1,4 @@
-package main.java.grami_directed_subgraphs.Dijkstra;
+package grami_directed_subgraphs.Dijkstra;
 
 
 import java.util.List;

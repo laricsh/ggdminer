@@ -1,10 +1,10 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.grami_directed_subgraphs.dataStructures.DFSCode;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanEdge;
-import main.java.grami_directed_subgraphs.dataStructures.IntFrequency;
-import main.java.grami_directed_subgraphs.search.*;
-import main.java.minerDataStructures.PropertyGraph;
+import grami_directed_subgraphs.dataStructures.DFSCode;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import grami_directed_subgraphs.dataStructures.IntFrequency;
+import grami_directed_subgraphs.search.*;
+import minerDataStructures.PropertyGraph;
 
 import java.util.List;
 import java.util.Map;

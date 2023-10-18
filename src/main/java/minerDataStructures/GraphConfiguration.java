@@ -1,4 +1,4 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

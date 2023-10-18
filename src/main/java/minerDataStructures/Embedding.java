@@ -1,6 +1,6 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.GGD.GraphPattern;
+import ggdBase.GraphPattern;
 
 import java.util.HashMap;
 

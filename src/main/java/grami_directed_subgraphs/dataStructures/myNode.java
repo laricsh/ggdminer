@@ -17,14 +17,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
-import main.java.grami_directed_subgraphs.Dijkstra.DijkstraEngine;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.Dijkstra.DijkstraEngine;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 
 public class myNode 
@@ -124,20 +125,20 @@ public class myNode
 		
 	}
 	
-	public void setReachableNodes(DijkstraEngine dj,HashMap<Integer, HashMap<Integer,myNode>> freqNodesByLabel, HPListGraph graph)
+	public void setReachableNodes(DijkstraEngine dj, HashMap<Integer, HashMap<Integer, myNode>> freqNodesByLabel, HPListGraph graph)
 	{
-		for (Iterator<  java.util.Map.Entry< Integer, HashMap<Integer,myNode> > >  it= freqNodesByLabel.entrySet().iterator(); it.hasNext();) 
+		for (Iterator<  Map.Entry<Integer, HashMap<Integer, myNode>> > it = freqNodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			java.util.Map.Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
-			HashMap<Integer,myNode> tmp = ar.getValue();
+			java.util.Map.Entry<Integer, HashMap<Integer, myNode>> ar =  it.next();
+			HashMap<Integer, myNode> tmp = ar.getValue();
 
-			for (Iterator<myNode> iterator = tmp.values().iterator(); iterator.hasNext();) 
+			for (Iterator<myNode> iterator = tmp.values().iterator(); iterator.hasNext();)
 			{
 				myNode node =  iterator.next();
 				if(ID==node.getID())
 					continue;
 				double dist=dj.getShortestDistance(node.getID());
-				if(dist!=Double.MAX_VALUE )
+				if(dist!= Double.MAX_VALUE )
 				{
 					if(graph.getEdgeLabel(ID, node.getID())!=null)
 					{
@@ -158,7 +159,7 @@ public class myNode
 	 * @param graph
 	 * @param freqNodesByLabel
 	 */
-	public void setReachableNodes_1hop(Graph graph,HashMap<Integer, HashMap<Integer,myNode>> freqNodesByLabel)
+	public void setReachableNodes_1hop(Graph graph, HashMap<Integer, HashMap<Integer, myNode>> freqNodesByLabel)
 	{
 		//get edge for each node
 		IntIterator it= graph.getListGraph().getOutEdgeIndices(getID());

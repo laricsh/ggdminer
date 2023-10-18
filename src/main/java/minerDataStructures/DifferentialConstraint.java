@@ -1,6 +1,6 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.GGD.Constraint;
+import ggdBase.Constraint;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class DifferentialConstraint {
 
     public boolean containSameAttrs(Constraint cons){
         for(Constraint constraint : constraints){
-            if(constraint.getAttr1().equals(cons.getAttr1()) && constraint.getAttr2().equals(cons.getAttr2()) && constraint.getVar1().equals(cons.getVar1()) && constraint.getVar2().equals(cons.getVar2())){
+            if(constraint.equals(cons)|| constraint.hasDifferentThreshold(cons)){
                 return true;
             }
         }

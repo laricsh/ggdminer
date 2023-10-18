@@ -12,11 +12,11 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.dataStructures.Extension;
-import main.java.grami_directed_subgraphs.dataStructures.Frequency;
-import main.java.grami_directed_subgraphs.dataStructures.Frequented;
+import grami_directed_subgraphs.dataStructures.Extension;
+import grami_directed_subgraphs.dataStructures.Frequency;
+import grami_directed_subgraphs.dataStructures.Frequented;
 
 import java.util.Collection;
 
@@ -35,7 +35,7 @@ import java.util.Collection;
  *            .equals(..))
  */
 public class FrequencyPruningStep<NodeType, EdgeType> extends
-		MiningStep<NodeType, EdgeType> {
+        MiningStep<NodeType, EdgeType> {
 
 	private final Frequency min, max;
 
@@ -47,7 +47,7 @@ public class FrequencyPruningStep<NodeType, EdgeType> extends
 	 * @param max
 	 */
 	public FrequencyPruningStep(final MiningStep<NodeType, EdgeType> next,
-			final Frequency min, final Frequency max) {
+                                final Frequency min, final Frequency max) {
 		super(next);
 		this.min = min;
 		this.max = max;

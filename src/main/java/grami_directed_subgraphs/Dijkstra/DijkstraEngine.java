@@ -1,4 +1,4 @@
-package main.java.grami_directed_subgraphs.Dijkstra;
+package grami_directed_subgraphs.Dijkstra;
 
 
 import java.util.*;
@@ -9,7 +9,7 @@ import java.util.*;
  * to every other city, and the shortest path from the start city to every other.
  * <p>
  * Upon calling
- * {@link #execute(Integer, Integer)}, 
+ * {@link #execute(Integer, Integer)},
  * the results of the algorithm are made available by calling
  * {@link #getPredecessor(City)}
  * and 
@@ -90,7 +90,7 @@ public class DijkstraEngine
     /**
      * Constructor.
      */
-    public DijkstraEngine(RoutesMap map,int distanceThreshold)
+    public DijkstraEngine(RoutesMap map, int distanceThreshold)
     {
         this.map = map;
         this.distanceThreshold=distanceThreshold;

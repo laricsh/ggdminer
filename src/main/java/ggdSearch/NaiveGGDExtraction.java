@@ -1,6 +1,9 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.GGD;
+import ggdBase.GGD;
+import ggdBase.GraphPattern;
+import minerDataStructures.answergraph.AnswerGraph;
+import minerDataStructures.nngraph.NNGraph;
 
 import java.util.LinkedList;
 import java.util.Set;
@@ -25,6 +28,26 @@ public class NaiveGGDExtraction<NodeType, EdgeType> extends ExtractionMethod<Nod
 
     @Override
     public Set<GGD<NodeType, EdgeType>> extractGGDs() {
+        return null;
+    }
+
+    @Override
+    public Set<GGD<NodeType, EdgeType>> extractGGDs_NoAG() {
+        return null;
+    }
+
+    @Override
+    public Set<GraphPattern<NodeType, EdgeType>> getNodes() {
+        return null;
+    }
+
+    @Override
+    public AnswerGraph<NodeType, EdgeType> getNodeAnswerGraph(GraphPattern<NodeType, EdgeType> gp) {
+        return null;
+    }
+
+    @Override
+    public NNGraph<GGDLatticeNode<NodeType, EdgeType>> getNNGraph() {
         return null;
     }
 

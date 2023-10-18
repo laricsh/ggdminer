@@ -1,9 +1,9 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.GGD.GGD;
-import main.java.ggdSearch.*;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.minerDataStructures.similarityMeasures.CommonVariablesConstraintsSimilarity;
+import ggdBase.GGD;
+import ggdSearch.*;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import minerDataStructures.nngraph.similarityMeasures.CommonVariablesConstraintsSimilarity;
 
 import java.io.IOException;
 import java.util.*;
@@ -21,14 +21,14 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     private Integer maxHops;
     private Double confidenceThreshold;
     private Integer size;
-    private Integer maxCombination;
+    private Integer maxSource;
     private Integer kgraph;
 
     //key to the hashmap is the label --> Key to the map is the idAccess and the set are the unique ids of the possible extension
     private HashMap<String, TreeMap<Integer, Set<Tuple<Integer,Double>>>> possibleExtensionIndex = new HashMap<>();
 
 
-    public GraphPatternIndex(Double confidenceThreshold, Double threshold, Integer kedges, String extractionMethod, Integer maxHops, Integer maxCombination, Integer kgraph){
+    public GraphPatternIndex(Double confidenceThreshold, Double threshold, Integer kedges, String extractionMethod, Integer maxHops, Integer maxSource, Integer kgraph){
         idAccess = new LinkedList<>();
         latticeNodeAccess = new HashMap<>();
         children = new HashMap<>();
@@ -38,14 +38,10 @@ public class GraphPatternIndex<NodeType, EdgeType> {
         this.kedges = kedges;
         this.maxHops = maxHops;
         this.confidenceThreshold = confidenceThreshold;
-        this.maxCombination = maxCombination;
+        this.maxSource = maxSource;
         this.kgraph = kgraph;
-        if(extractionMethod.equals("graphbased")){
-            this.extractionMethod = new GraphBasedGGDExtraction(this.kedges, this.diversityThreshold, this.maxHops, confidenceThreshold, new CommonVariablesConstraintsSimilarity<NodeType,EdgeType>());
-        }else if(extractionMethod.equals("setbased")){
-            this.extractionMethod = new SetBasedGGDExtraction(this.kedges, this.diversityThreshold, confidenceThreshold, new CommonVariablesConstraintsSimilarity<NodeType, EdgeType>(), GGDSearcher.minCoverage, GGDSearcher.minDiversity, GGDSearcher.maxCombination);
-        }else if(extractionMethod.equals("greedybased")){
-            this.extractionMethod = new GreedyBasedGGDExtraction(this.kedges, this.diversityThreshold, confidenceThreshold, new CommonVariablesConstraintsSimilarity<NodeType, EdgeType>(), GGDSearcher.minCoverage, GGDSearcher.minDiversity, this.maxCombination, this.kgraph);
+        if(extractionMethod.equals("greedybased")){
+            this.extractionMethod = new GreedyBasedGGDExtraction(this.kedges, this.diversityThreshold, confidenceThreshold, new CommonVariablesConstraintsSimilarity<NodeType, EdgeType>(), GGDSearcher.minCoverage, GGDSearcher.minDiversity, this.maxSource, this.kgraph);
         }
         if(extractionMethod.equals("naive")){
             this.extractionMethod = new NaiveGGDExtraction();
@@ -70,13 +66,141 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     //this function is responsible for adding just a single node
     public Integer addNode(GGDLatticeNode<NodeType, EdgeType> newNode) throws CloneNotSupportedException {
         return extractionMethod.addNode(newNode);
+        //if(extractionMethod.change){
+        //    return 1;
+        //}else return 0;
+        //size++;
+        //return size;
+        /*extractionMethod.addNode(newNode);
+        if(latticeNodeAccess.containsKey(newNode)){
+            if(newNode.variables != null){
+                Integer index = latticeNodeAccess.get(newNode);
+                latticeNodeAccess.put(newNode, index);
+                return index;
+            }
+            return latticeNodeAccess.get(newNode);
+        }
+        idAccess.addLast(newNode);
+        Integer index = idAccess.size()-1;
+        latticeNodeAccess.put(newNode, index);
+        return index;*/
+    }
+
+    //this function adds all children and brothers of a node
+    public void addAllNodeAndChildrenBrothers(GGDLatticeNode<NodeType, EdgeType> newNode, Collection<GGDLatticeNode<NodeType, EdgeType>> brothers, Collection<GGDLatticeNode<NodeType, EdgeType>> children) throws CloneNotSupportedException {
+        Integer index = addNode(newNode);
+        //addExtension(newNode);
+        Set<Integer> childrenids = new HashSet<>();
+        Set<Integer> brotherids = new HashSet<>();
+        for(GGDLatticeNode<NodeType, EdgeType> brother : brothers){
+            Integer brotherIndex = addNode(brother);
+            brotherids.add(brotherIndex);
+            //     addExtension(brother);
+        }
+        for(GGDLatticeNode<NodeType, EdgeType> child: children){
+            Integer childIndex = addNode(child);
+            childrenids.add(childIndex);
+            //     addExtension(child);
+        }
+        this.brother.put(index, brotherids);
+        brotherids.add(index);
+        this.children.put(index, childrenids);
+        //add all brothers index as well
+        for(Integer brid: brotherids){
+            this.brother.put(brid, brotherids);
+            this.children.put(brid, childrenids);
+        }
+        System.out.println("Extensions added to the index!");
+    }
+
+    public boolean addAllNodeAndChildrenCodeBrothers(GGDLatticeNode<NodeType, EdgeType> newNode, Collection<GGDLatticeNode<NodeType, EdgeType>> brothers, Collection<HPListGraph<NodeType, EdgeType>> childrenCodes) throws CloneNotSupportedException {
+        Integer index = addNode(newNode);
+        //addExtension(newNode);
+        //Set<Integer> childrenids = new HashSet<>();
+        Set<Integer> brotherids = new HashSet<>();
+        Set<String> childrenCodesStr = new HashSet<>();
+        for(GGDLatticeNode<NodeType, EdgeType> brother : brothers){
+            Integer brotherIndex = addNode(brother);
+            // if(brotherIndex != -1){
+            brotherids.add(brotherIndex);
+            // }
+            //     addExtension(brother);
+        }
+        // if(index != -1){
+        for(HPListGraph<NodeType, EdgeType> code: childrenCodes){
+            childrenCodesStr.add(code.toString());
+        }
+
+        this.childrenCodes.put(newNode.getHPlistGraph().toString(), childrenCodesStr);
+        //for(GGDLatticeNode<NodeType, EdgeType> child: children){
+        //    Integer childIndex = addNode(child);
+        //    childrenids.add(childIndex);
+        //     addExtension(child);
+        //}
+        this.brother.put(index, brotherids);
+        brotherids.add(index);
+        //  }
+        //this.children.put(index, childrenids);
+        //add all brothers index as well
+        //if(index == -1 && brotherids.isEmpty()){
+        //    return false;
+        //}
+        for(Integer brid: brotherids){
+            this.brother.put(brid, brotherids);
+            //  this.children.put(brid, childrenids);
+        }
+        System.out.println("Extensions added to the index! --> Without Children");
+        return true;
+    }
+
+    public void addAllNodeAndChildrenBrothers(GGDLatticeNode<NodeType, EdgeType> newNode, Collection<GGDLatticeNode<NodeType, EdgeType>> brothers) throws CloneNotSupportedException {
+        Integer index = addNode(newNode);
+        //addExtension(newNode);
+        Set<Integer> childrenids = new HashSet<>();
+        Set<Integer> brotherids = new HashSet<>();
+        for(GGDLatticeNode<NodeType, EdgeType> brother : brothers){
+            Integer brotherIndex = addNode(brother);
+            brotherids.add(brotherIndex);
+            //     addExtension(brother);
+        }
+        //for(GGDLatticeNode<NodeType, EdgeType> child: children){
+        //    Integer childIndex = addNode(child);
+        //    childrenids.add(childIndex);
+        //     addExtension(child);
+        //}
+        this.brother.put(index, brotherids);
+        brotherids.add(index);
+        //this.children.put(index, childrenids);
+        //add all brothers index as well
+        for(Integer brid: brotherids){
+            this.brother.put(brid, brotherids);
+            this.children.put(brid, childrenids);
+        }
+        System.out.println("Extensions added to the index! --> Without Children");
+    }
+
+    public void addExtension(GGDLatticeNode<NodeType, EdgeType> extension){
+        List<String> labels = extension.query.gp.getLabels();
+        Integer idOfThisNode = getNode(extension);
+        for(String l: labels){
+            if(possibleExtensionIndex.containsKey(l)){
+                TreeMap<Integer, Set<Tuple<Integer,Double>>> m = possibleExtensionIndex.get(l);
+                if(!m.containsKey(idOfThisNode)){
+                    m.put(idOfThisNode, new HashSet<>());
+                }
+                addPossibleExtensions(l, idOfThisNode);
+            }else{
+                TreeMap<Integer, Set<Tuple<Integer, Double>>> m = new TreeMap<>();
+                m.put(idOfThisNode, new HashSet<>());
+                possibleExtensionIndex.put(l, m);
+            }
+        }
     }
 
     public void addPossibleExtensions(String label, Integer idOfThisNode){
         TreeMap<Integer, Set<Tuple<Integer, Double>>> m = this.possibleExtensionIndex.get(label);
         Set<Integer> keys = m.keySet();
         GGDLatticeNode<NodeType, EdgeType> thisNode = getNode(idOfThisNode);
-        List<Embedding> embeddingsY = thisNode.query.embeddings;
         for(Integer key: keys){
             GGDLatticeNode<NodeType, EdgeType> keyNode = getNode(key);
             Integer sizeX = keyNode.query.embeddings.size();
@@ -157,6 +281,7 @@ public class GraphPatternIndex<NodeType, EdgeType> {
                 }else if(existingConfidence < confidence){
                     this.possibleExtensionIndex.get(labelOfExtension).get(key).add(new Tuple<>(childId, confidence));
                 }
+                //this.possibleExtensionIndex.get(labelOfExtension).get(key).add(new Tuple<>(childId, confidence));
             }
         }
     }
@@ -173,6 +298,13 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     }
 
     public void buildGraph(Set<GGDLatticeNode<NodeType, EdgeType>> set) throws CloneNotSupportedException {
+        //System.out.println("SET SIZE::" + set.size());
+        /*int counter = 0;
+        for(GGDLatticeNode<NodeType,EdgeType> g : set){
+            System.out.println("CANDIDATE " + counter);
+            g.prettyPrint();
+            counter++;
+        }*/
         this.extractionMethod.addNodes(set);
     }
 
@@ -223,13 +355,13 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     public void addPossibleExtensionsChildren(){
         Set<String> codesThatHaveChildren = this.childrenCodes.keySet();
         for(String code: codesThatHaveChildren){
-           Set<Integer> parents = getNodesWithThisCode(code);
-           Set<Integer> children = getNodesWithThisCode(this.childrenCodes.get(code));
-           if(!children.isEmpty()){
-              // for(Integer child: children){
-                   addPossibleExtensionSetChildren(parents, children);
-              // }
-           }
+            Set<Integer> parents = getNodesWithThisCode(code);
+            Set<Integer> children = getNodesWithThisCode(this.childrenCodes.get(code));
+            if(!children.isEmpty()){
+                // for(Integer child: children){
+                addPossibleExtensionSetChildren(parents, children);
+                // }
+            }
 
         }
     }
@@ -264,9 +396,9 @@ public class GraphPatternIndex<NodeType, EdgeType> {
         Set<GGDLatticeNode<NodeType,EdgeType>> allNodes = this.latticeNodeAccess.keySet();
         Set<Integer> answer = new HashSet<>();
         for(GGDLatticeNode<NodeType, EdgeType> node: allNodes){
-                if(node.toString().equals(code)){
-                    answer.add(this.latticeNodeAccess.get(node));
-                }
+            if(node.toString().equals(code)){
+                answer.add(this.latticeNodeAccess.get(node));
+            }
         }
         return answer;
     }
@@ -274,6 +406,11 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     public Set<GGD> extractGGDsMethod() throws IOException, CloneNotSupportedException {
         //System.out.println("Number of nodes in swg:" + ((GraphBasedGGDExtraction) extractionMethod).numberOfNodes());
         return this.extractionMethod.extractGGDs();
+    }
+
+    public Set<GGD> extractGGDsMethod_NoAG() throws IOException, CloneNotSupportedException {
+        //System.out.println("Number of nodes in swg:" + ((GraphBasedGGDExtraction) extractionMethod).numberOfNodes());
+        return this.extractionMethod.extractGGDs_NoAG();
     }
 
 
@@ -299,4 +436,109 @@ public class GraphPatternIndex<NodeType, EdgeType> {
     public void setKedges(Integer kedges) {
         this.kedges = kedges;
     }
+
+    public LinkedList<GGDLatticeNode<NodeType, EdgeType>> getIdAccess() {
+        return idAccess;
+    }
+
+    public void setIdAccess(LinkedList<GGDLatticeNode<NodeType, EdgeType>> idAccess) {
+        this.idAccess = idAccess;
+    }
+
+    public HashMap<GGDLatticeNode<NodeType, EdgeType>, Integer> getLatticeNodeAccess() {
+        return latticeNodeAccess;
+    }
+
+    public void setLatticeNodeAccess(HashMap<GGDLatticeNode<NodeType, EdgeType>, Integer> latticeNodeAccess) {
+        this.latticeNodeAccess = latticeNodeAccess;
+    }
+
+    public HashMap<Integer, Set<Integer>> getChildren() {
+        return children;
+    }
+
+    public void setChildren(HashMap<Integer, Set<Integer>> children) {
+        this.children = children;
+    }
+
+    public HashMap<Integer, Set<Integer>> getBrother() {
+        return brother;
+    }
+
+    public void setBrother(HashMap<Integer, Set<Integer>> brother) {
+        this.brother = brother;
+    }
+
+    public HashMap<String, Set<String>> getChildrenCodes() {
+        return childrenCodes;
+    }
+
+    public void setChildrenCodes(HashMap<String, Set<String>> childrenCodes) {
+        this.childrenCodes = childrenCodes;
+    }
+
+    public Double getDiversityThreshold() {
+        return diversityThreshold;
+    }
+
+    public void setDiversityThreshold(Double diversityThreshold) {
+        this.diversityThreshold = diversityThreshold;
+    }
+
+    public ExtractionMethod getExtractionMethod() {
+        return extractionMethod;
+    }
+
+    public void setExtractionMethod(ExtractionMethod extractionMethod) {
+        this.extractionMethod = extractionMethod;
+    }
+
+    public Integer getMaxHops() {
+        return maxHops;
+    }
+
+    public void setMaxHops(Integer maxHops) {
+        this.maxHops = maxHops;
+    }
+
+    public Double getConfidenceThreshold() {
+        return confidenceThreshold;
+    }
+
+    public void setConfidenceThreshold(Double confidenceThreshold) {
+        this.confidenceThreshold = confidenceThreshold;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
+    }
+
+    public Integer getMaxCombination() {
+        return maxSource;
+    }
+
+    public void setMaxCombination(Integer maxCombination) {
+        this.maxSource = maxCombination;
+    }
+
+    public Integer getKgraph() {
+        return kgraph;
+    }
+
+    public void setKgraph(Integer kgraph) {
+        this.kgraph = kgraph;
+    }
+
+    public HashMap<String, TreeMap<Integer, Set<Tuple<Integer, Double>>>> getPossibleExtensionIndex() {
+        return possibleExtensionIndex;
+    }
+
+    public void setPossibleExtensionIndex(HashMap<String, TreeMap<Integer, Set<Tuple<Integer, Double>>>> possibleExtensionIndex) {
+        this.possibleExtensionIndex = possibleExtensionIndex;
+    }
+
 }

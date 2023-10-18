@@ -1,4 +1,4 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -42,7 +42,7 @@ public class BoundedPriorityQueue<E> extends PriorityBlockingQueue<E> {
      */
     @Override
     public final boolean add(final E element) {
-        if (!(element instanceof java.lang.Comparable)) {
+        if (!(element instanceof Comparable)) {
             throw new ClassCastException();
         }
 

@@ -1,9 +1,9 @@
-package main.java.preProcess;
+package preProcess;
 
-import main.java.grami_directed_subgraphs.dataStructures.myNode;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
+import grami_directed_subgraphs.dataStructures.myNode;
+import grami_directed_subgraphs.utilities.MyPair;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
 
 import java.util.*;
 

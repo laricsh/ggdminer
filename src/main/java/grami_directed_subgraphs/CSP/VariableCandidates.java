@@ -17,9 +17,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.CSP;
+package grami_directed_subgraphs.CSP;
 
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.util.ArrayList;
 
@@ -29,7 +29,7 @@ public class VariableCandidates
 	private int variableID;
 	private ArrayList<MyPair<Integer, Double>> candidates;
 	
-	public VariableCandidates(int variableID,ArrayList<MyPair<Integer, Double>> candidates) 
+	public VariableCandidates(int variableID, ArrayList<MyPair<Integer, Double>> candidates)
 	{
 		this.variableID=variableID;
 		this.candidates=candidates;

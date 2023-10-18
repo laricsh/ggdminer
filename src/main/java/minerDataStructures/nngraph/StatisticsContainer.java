@@ -1,4 +1,4 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 
 /*
  * The MIT License

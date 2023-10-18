@@ -17,16 +17,16 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.CSP;
+package grami_directed_subgraphs.CSP;
 
-import main.java.grami_directed_subgraphs.automorphism.Automorphism;
-import main.java.grami_directed_subgraphs.dataStructures.*;
-import main.java.grami_directed_subgraphs.decomposer.Decomposer;
-import main.java.grami_directed_subgraphs.pruning.SPpruner;
-import main.java.grami_directed_subgraphs.statistics.TimedOutSearchStats;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
-import main.java.grami_directed_subgraphs.utilities.Settings;
-import main.java.grami_directed_subgraphs.utilities.Util;
+import grami_directed_subgraphs.automorphism.Automorphism;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.decomposer.Decomposer;
+import grami_directed_subgraphs.pruning.SPpruner;
+import grami_directed_subgraphs.statistics.TimedOutSearchStats;
+import grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.utilities.Settings;
+import grami_directed_subgraphs.utilities.Util;
 
 import java.awt.*;
 import java.math.BigDecimal;
@@ -77,7 +77,7 @@ public class DFSSearch
 	
 
 	
-	public DFSSearch(ConstraintGraph cg,int minFreqThreshold,HashMap<Integer, HashSet<Integer>> nonCands) 
+	public DFSSearch(ConstraintGraph cg, int minFreqThreshold, HashMap<Integer, HashSet<Integer>> nonCands)
 	{
 		if(!Settings.CACHING)
 			nonCandidates=(HashMap<Integer, HashSet<Integer>>) nonCands.clone();
@@ -116,7 +116,7 @@ public class DFSSearch
 	private void AC_3_New(Variable[] input, int freqThreshold)
 	{
 		LinkedList<VariablePair> Q= new LinkedList<VariablePair>();
-		HashSet<String> contains = new HashSet<String> ();
+		HashSet<String> contains = new HashSet<String>();
 		VariablePair vp;
 		//initialize...
 		for (int i = 0; i < input.length; i++) 
@@ -151,7 +151,7 @@ public class DFSSearch
 				ArrayList<MyPair<Integer, Double>> list=v1.getDistanceConstrainedBy();
 				for (int j = 0; j < list.size(); j++) 
 				{
-					Integer tempMP = list.get(j).getA(); 
+					Integer tempMP = list.get(j).getA();
 					Variable consVar=variables[tempMP];
 					vp =new VariablePair(consVar,v1,list.get(j).getB());
 					if(!contains.contains(vp.getString()))
@@ -186,12 +186,12 @@ public class DFSSearch
 	 */
 	private void refine_Newest(Variable v1, Variable v2, double edgeLabel, int freqThreshold)
 	{
-		HashMap<Integer,myNode> listA,listB;
+		HashMap<Integer, myNode> listA,listB;
 		
 		int labelB=v2.getLabel();//lebel of my neighbor
 		listA=v1.getList();//the first column
 		listB=v2.getList();//the second column
-		HashMap<Integer,myNode> newList= new HashMap<Integer,myNode>();//the newly assigned first column
+		HashMap<Integer, myNode> newList= new HashMap<Integer, myNode>();//the newly assigned first column
 		HashMap<Integer, myNode> newReachableListB = new HashMap<Integer, myNode>();//the newly asigned second column
 		
 		//go over the first column
@@ -227,7 +227,7 @@ public class DFSSearch
 	{
 		HashMap<Integer, myNode> list = autos[index].getList();
 		
-		for (Iterator<Integer> iterator = list.keySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Integer> iterator = list.keySet().iterator(); iterator.hasNext();)
 		{
 			int nodeIndex = iterator.next();
 			if(preComputed[nodeIndex]==1)
@@ -393,7 +393,7 @@ public class DFSSearch
 			int index=-1;
 			index = sOrder.getNext();
 			Variable firstVB = variables[index];
-			HashMap<Integer,myNode> firstList= firstVB.getList();
+			HashMap<Integer, myNode> firstList= firstVB.getList();
 			AssignmentInstance instance = new AssignmentInstance(variables.length);
 			if(tmp.size()>TimedOutSearchStats.maximum)
 				TimedOutSearchStats.maximum = tmp.size();
@@ -457,7 +457,7 @@ public class DFSSearch
 					if(Settings.isAutomorphismOn && atm.hasAutomorphisms())
 					{
 						HashMap<Integer, myNode> list= autos[firstVB.getID()].getList();
-						for (Iterator<Integer>  iterator2= list.keySet().iterator(); iterator2.hasNext();) 
+						for (Iterator<Integer> iterator2 = list.keySet().iterator(); iterator2.hasNext();)
 						{
 							int nodeIndex= iterator2.next();
 							HashSet<Integer> nonCan=nonCandidates.get(nodeIndex);
@@ -498,11 +498,11 @@ public class DFSSearch
 					//instance Found
 					for (int j = 0; j < variables.length; j++) 
 					{
-						myNode assignedNode=instance.getAssignment(j);						
+						myNode assignedNode=instance.getAssignment(j);
 						if(Settings.isAutomorphismOn && atm.hasAutomorphisms())
 						{
 								HashMap<Integer, myNode> list= autos[j].getList();
-								for (Iterator<Integer>  iterator2= list.keySet().iterator(); iterator2.hasNext();) 
+								for (Iterator<Integer> iterator2 = list.keySet().iterator(); iterator2.hasNext();)
 								{
 									int nodeIndex= iterator2.next();
 									if(!result[nodeIndex].getList().containsKey(assignedNode.getID()))
@@ -525,7 +525,7 @@ public class DFSSearch
 				}
 				else if(value>=0)
 					if(Settings.PRINT)
-					System.out.println("ERRRRRRRRRRRRRRRRRRR........................................Value: "+value);	
+					System.out.println("ERRRRRRRRRRRRRRRRRRR........................................Value: "+value);
 				
 				instance.clear();
 			}
@@ -564,7 +564,7 @@ public class DFSSearch
 							{
 								HashMap<HPListGraph<Integer, Double>, ArrayList<Integer>> edgeRemoved= maps.get(k);
 								
-								for (Iterator<Entry<HPListGraph<Integer, Double>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();) 
+								for (Iterator<Entry<HPListGraph<Integer, Double>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();)
 								{
 									System.out.println(counter++);
 									Entry<HPListGraph<Integer, Double>, ArrayList<Integer>> removedEdgeEntry = iterator.next();
@@ -582,7 +582,7 @@ public class DFSSearch
 									
 									Query qry = new Query((HPListGraph<Integer, Double>)listGraph);
 									SPpruner sp = new SPpruner();
-									ArrayList<HashMap<Integer,myNode>> candidatesByNodeID = new ArrayList<HashMap<Integer,myNode>> ();
+									ArrayList<HashMap<Integer, myNode>> candidatesByNodeID = new ArrayList<HashMap<Integer, myNode>>();
 									for (int l = 0; l < listGraph.getNodeCount(); l++) 
 									{
 										candidatesByNodeID.add((HashMap<Integer, myNode>) variables[graphMappings.get(l)].getList().clone());
@@ -637,7 +637,7 @@ public class DFSSearch
 							if(Settings.isAutomorphismOn && atm.hasAutomorphisms())
 							{
 								HashMap<Integer, myNode> list= autos[firstVB.getID()].getList();
-								for (Iterator<Integer>  iterator2= list.keySet().iterator(); iterator2.hasNext();) 
+								for (Iterator<Integer> iterator2 = list.keySet().iterator(); iterator2.hasNext();)
 								{
 									int nodeIndex= iterator2.next();
 									HashSet<Integer> nonCan=nonCandidates.get(nodeIndex);
@@ -684,7 +684,7 @@ public class DFSSearch
 								if(Settings.isAutomorphismOn && atm.hasAutomorphisms())
 								{
 										HashMap<Integer, myNode> list= autos[k].getList();
-										for (Iterator<Integer>  iterator2= list.keySet().iterator(); iterator2.hasNext();) 
+										for (Iterator<Integer> iterator2 = list.keySet().iterator(); iterator2.hasNext();)
 										{
 											int nodeIndex= iterator2.next();
 											if(!result[nodeIndex].getList().containsKey(assignedNode.getID()))
@@ -838,7 +838,7 @@ public class DFSSearch
 			if(finalCandidates.size()==0)
 			{
 				//learn the new constraints !!!
-				ArrayList<Point> constrainedVariableIndices=Util.getZerosIntersectionIndices(variableCandidates);
+				ArrayList<Point> constrainedVariableIndices= Util.getZerosIntersectionIndices(variableCandidates);
 				if(constrainedVariableIndices.size()!=0)
 				{
 					Point p =constrainedVariableIndices.get(0);
@@ -1065,7 +1065,7 @@ public class DFSSearch
 		return cloneDomian;
 	}
 	
-	private Variable[] look_ahead(int index, myNode node ,Variable[] currentDomain)
+	private Variable[] look_ahead(int index, myNode node , Variable[] currentDomain)
 	{
 		Variable[] result=cloneDomian(currentDomain);
 		
@@ -1105,7 +1105,7 @@ public class DFSSearch
 		return result;
 	}
 	
-	private int solve(ArrayList<Integer> X,Variable[] currentDomain,AssignmentInstance instance)
+	private int solve(ArrayList<Integer> X, Variable[] currentDomain, AssignmentInstance instance)
 	{
 		int index = sOrder.getNext();
 		if(index!=-1)
@@ -1119,7 +1119,7 @@ public class DFSSearch
 			if(!isAnyEmptyD_dash)
 			{
 				//iterate over them !!
-				for (Iterator<Entry<Integer, myNode>> iterator = currentVariable.getList().entrySet().iterator();iterator.hasNext();) 
+				for (Iterator<Entry<Integer, myNode>> iterator = currentVariable.getList().entrySet().iterator(); iterator.hasNext();)
 				{
 					Entry<Integer, myNode> nodeEntry = iterator.next();
 					Variable[] D_dash_dash=look_ahead(index, nodeEntry.getValue(), D_dash);
@@ -1247,7 +1247,7 @@ public class DFSSearch
 			
 			
 			
-			ArrayList<MyPair<Integer, Double>> finalCandidates= Util.getIntersection(candidates);						
+			ArrayList<MyPair<Integer, Double>> finalCandidates= Util.getIntersection(candidates);
 			int hasResult=0;
 			
 			//end check Validty with constraintVariables
@@ -1296,7 +1296,7 @@ public class DFSSearch
 		
 		index = sOrder.getNext();
 		Variable firstVB = variables[index];
-		HashMap<Integer,myNode> firstList= firstVB.getList();
+		HashMap<Integer, myNode> firstList= firstVB.getList();
 		
 		int tempCounter=0;
 		

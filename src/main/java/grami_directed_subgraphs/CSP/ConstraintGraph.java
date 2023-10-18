@@ -17,11 +17,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.CSP;
+package grami_directed_subgraphs.CSP;
 
-import main.java.grami_directed_subgraphs.dataStructures.Graph;
-import main.java.grami_directed_subgraphs.dataStructures.Query;
-import main.java.grami_directed_subgraphs.pruning.SPpruner;
+import grami_directed_subgraphs.dataStructures.Graph;
+import grami_directed_subgraphs.dataStructures.Query;
+import grami_directed_subgraphs.pruning.SPpruner;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +31,7 @@ public class ConstraintGraph
 	private Variable[] variables;
 	private Query qry;
 	
-	public ConstraintGraph(Graph graph,Query qry,HashMap<Integer, HashSet<Integer>> nonCandidates) 
+	public ConstraintGraph(Graph graph, Query qry, HashMap<Integer, HashSet<Integer>> nonCandidates)
 	{
 		this.qry=qry;		
 		SPpruner sp = new SPpruner();

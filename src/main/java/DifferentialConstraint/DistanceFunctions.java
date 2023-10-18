@@ -1,4 +1,4 @@
-package main.java.DifferentialConstraint;
+package DifferentialConstraint;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.text.similarity.LevenshteinDistance;
@@ -12,33 +12,32 @@ public class DistanceFunctions {
 
     public Double calculateDistance(Object v1, Object v2, String datatype){
         Double result = 0.0;
-        switch (datatype){
-            case "string":
-                result = editDistance((String) v1, (String) v2);
-                break;
-            case "number":
-                if(v1 == null || v2 == null){
-                    result = Double.MAX_VALUE;
-                    break;
-                }
-                else{
-                    try{
-                        result = difference(Double.parseDouble(v1.toString()), Double.parseDouble(v2.toString()));
-                        if(result < 0){
-                            result = Math.abs(result);//result * -1.0;
-                        }
-                        break;
-                    }catch (Exception e){
-                        result = Double.MAX_VALUE;
-                        break;
+        if(datatype.equalsIgnoreCase("string")){
+            result = editDistance((String) v1, (String) v2);
+            return result;
+        }else if(datatype.equalsIgnoreCase("number")){
+            if(v1 == null || v2 == null){
+                result = Double.MAX_VALUE;
+                return result;
+            }
+            else{
+                try{
+                    result = difference(Double.parseDouble(v1.toString()), Double.parseDouble(v2.toString()));
+                    if(result < 0){
+                        result = Math.abs(result);//result * -1.0;
                     }
+                    return result;
+                }catch (Exception e){
+                    result = Double.MAX_VALUE;
+                    return result;
                 }
-            case "boolean":
-                result = booleanAnd( (Boolean) v1, (Boolean) v2);
-                break;
-            case "set":
-                result = jaccardSim((String) v1, (String) v2, " ");
-                break;
+            }
+        }else if(datatype.equalsIgnoreCase("boolean")){
+            result = booleanAnd( (Boolean) v1, (Boolean) v2);
+            return result;
+        }else if(datatype.equalsIgnoreCase("set")){
+            result = jaccardSim((String) v1, (String) v2, " ");
+            return result;
         }
         return result;
     }
@@ -80,5 +79,3 @@ public class DistanceFunctions {
 
 
 }
-
-

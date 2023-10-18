@@ -12,11 +12,11 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.AlgorithmInterface;
+package grami_directed_subgraphs.AlgorithmInterface;
 
-import main.java.grami_directed_subgraphs.search.Extender;
-import main.java.grami_directed_subgraphs.search.Generic;
-import main.java.grami_directed_subgraphs.search.SearchLatticeNode;
+import grami_directed_subgraphs.search.Extender;
+import grami_directed_subgraphs.search.Generic;
+import grami_directed_subgraphs.search.SearchLatticeNode;
 
 import java.io.Serializable;
 import java.util.Iterator;

@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 import java.util.*;
 
@@ -142,7 +142,7 @@ public class HPListGraph<NodeType, EdgeType> implements
 
 	@SuppressWarnings("unchecked")
 	private HPListGraph(final String name, final int id, final int nodeSize,
-			final int edgeSize) {
+                        final int edgeSize) {
 		this.name = name;
 		this.id = id;
 		node_edges = new int[nodeSize][];

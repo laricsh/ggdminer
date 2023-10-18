@@ -1,7 +1,7 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.minerDataStructures.DifferentialConstraint;
-import main.java.minerDataStructures.PropertyGraph;
+import minerDataStructures.DifferentialConstraint;
+import minerDataStructures.PropertyGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -12,9 +12,9 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.dataStructures.Extension;
+import grami_directed_subgraphs.dataStructures.Extension;
 
 import java.util.Collection;
 
@@ -33,8 +33,7 @@ import java.util.Collection;
  *            the type of the edge labels (will be hashed and checked with
  *            .equals(..))
  */
-public class EmbeddingBasedGenerationStep<NodeType, EdgeType> extends
-		GenerationStep<NodeType, EdgeType> {
+public class EmbeddingBasedGenerationStep<NodeType, EdgeType> extends GenerationStep<NodeType, EdgeType> {
 	/**
 	 * creates a new GenerationStep
 	 * 

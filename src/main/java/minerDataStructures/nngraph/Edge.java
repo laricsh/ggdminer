@@ -1,4 +1,4 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 
 /**
  * Represent a weighted edge (a link from node n1 to node n2)

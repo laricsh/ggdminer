@@ -1,12 +1,12 @@
-package main.java.minerDataStructures.similarityMeasures;
+package minerDataStructures.nngraph.similarityMeasures;
 
-import main.java.GGD.Constraint;
-import main.java.GGD.EdgesPattern;
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.DifferentialConstraint;
-import main.java.minerDataStructures.Tuple;
-import main.java.minerDataStructures.Tuple4;
-import main.java.minerDataStructures.nngraph.SimilarityInterface;
+import ggdBase.Constraint;
+import ggdBase.EdgesPattern;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.DifferentialConstraint;
+import minerDataStructures.Tuple;
+import minerDataStructures.Tuple4;
+import minerDataStructures.nngraph.SimilarityInterface;
 
 import java.util.LinkedList;
 
@@ -47,7 +47,7 @@ public class CommonVariablesConstraintsSimilarity<NodeType, EdgeType> implements
     }
 
     public double CommonConstraints_V2(DifferentialConstraint node1, DifferentialConstraint node2){
-        LinkedList<Tuple<String,String>> cons_1 = new LinkedList<>();
+        LinkedList<Tuple<String, String>> cons_1 = new LinkedList<>();
             for(Constraint cons: node1.constraints){
                 cons_1.add(new Tuple<String, String>(cons.getLabel1(), cons.getAttr1()));
                 if(cons.getVar2() != null){

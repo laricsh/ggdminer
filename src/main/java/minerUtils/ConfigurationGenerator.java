@@ -1,13 +1,13 @@
-package main.java.minerUtils;
+package minerUtils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import main.java.minerDataStructures.DecisionBoundaries;
-import main.java.minerDataStructures.GGDMinerConfiguration;
-import main.java.minerDataStructures.GraphConfiguration;
-import main.java.minerDataStructures.LabelCodes;
+import minerDataStructures.DecisionBoundaries;
+import minerDataStructures.GGDMinerConfiguration;
+import minerDataStructures.GraphConfiguration;
+import minerDataStructures.LabelCodes;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +16,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+/***
+ * Naive configuration generator of configminer.json given a graph config.json
+ */
 public class ConfigurationGenerator {
 
     public static int[] calculateSupportOfThisDataset(GraphConfiguration configGraph) throws IOException {
@@ -35,11 +38,10 @@ public class ConfigurationGenerator {
         Integer min = size.get(0);
         Integer median = size.get(configGraph.getVertexLabels().length/2);
         Integer average = sum/size.size();
-        int[] returnValues = {average, median, min};
+        return new int[]{min,median,average};
         //support values --> minimum number of labels
         //median number of labels
         //and average
-        return returnValues;
     }
 
     public static List<DecisionBoundaries> getMinThresholdPerType(double editDistanceThesh, double minDifference, int intThresh, double minDifferenceInt){
@@ -63,23 +65,26 @@ public class ConfigurationGenerator {
     }
 
     public static void main(String[] args) throws IOException {
-        double[] confidence = {0.7,0.8,0.9};
-        int[] kedges = {2,3,4};
+        double[] confidence = {0.7};
+        int[] kedges = {2,3};
         double simThreshold =0.5;
-        int[] kgraph = {5};
-        int[] maxHops = {3};
+        int[] kgraph = {5};//{2,3,5};
+        int[] maxHops = {3};//;{2,3};
         double schemaSim = 0.8;
-        double[] editSimThreshold = {5.0};
-        double sampleRate = 0.0;
+        double[] editSimThreshold = {5.0};//{3.0, 5.0, 7.0};
+        double sampleRate = 0.0;//{0.0, 0.25, 0.5};
         double minDifference = 2.0;
         double minDifferenceInt = 5.0;
         //int kgraph = 5;
         double minCoverage = 0.0;
         double maxCoverage = 0.0;
-        int[] maxMappings = {3};
+        int[] maxMappings = {3};//{1,3,5};
         String preprocess = "schema";
-        int[] maxCombinations = {7};
-        int[] diffThreshold = {10};
+        int[] maxSource = {7};//{2,3,5};
+        int maxCombinations = 2;
+        int[] diffThreshold = {10};//{5, 10, 50};
+
+        //configMiner.loadFromFile(configDiscoveryFilename);
 
         for(String dataset: args){
 
@@ -111,7 +116,7 @@ public class ConfigurationGenerator {
                         for (int kedge : kedges) {
                             for (int kg : kgraph) {
                                 for (double threshEdit : editSimThreshold) {
-                                    for (int maxComb : maxCombinations) {
+                                    for (int maxS : maxSource) {
                                         for (int maxMap : maxMappings) {
                                             for (int hops : maxHops) {
                                                 GGDMinerConfiguration configMiner = new GGDMinerConfiguration();
@@ -131,7 +136,8 @@ public class ConfigurationGenerator {
                                                 configMiner.kedge = kedge;
                                                 configMiner.kgraph = kg;
                                                 configMiner.schemaSim = schemaSim;
-                                                configMiner.maxCombination = maxComb;
+                                                configMiner.maxSource = maxS;
+                                                configMiner.maxCombination = maxCombinations;
                                                 configMiner.maxMappings = maxMap;
                                                 configMiner.minCoverage = 0.0;
                                                 configMiner.minDiversity = 0.0;

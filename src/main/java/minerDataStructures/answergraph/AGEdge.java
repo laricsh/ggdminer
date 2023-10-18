@@ -1,10 +1,10 @@
-package main.java.minerDataStructures.answergraph;
+package minerDataStructures.answergraph;
 
-import main.java.GGD.EdgesPattern;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.googlecode.javaewah.EWAHCompressedBitmap;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
+import ggdBase.EdgesPattern;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
 
 import java.util.HashMap;
 import java.util.Map;

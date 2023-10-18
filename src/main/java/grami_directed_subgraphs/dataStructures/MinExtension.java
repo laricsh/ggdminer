@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 /**
  * Represents a possible extension used during the test for beingcanonical.
@@ -121,8 +121,8 @@ public class MinExtension<NodeType, EdgeType> extends
 
 
 	protected MinExtension<NodeType, EdgeType> set(final int nodeA,
-			final int nodeB, final int labelA, final int edgeLabel,
-			final int labelB, final int dir, final int gEdge, final int gNodeB, int theLabelA, int theLabelB) {
+                                                   final int nodeB, final int labelA, final int edgeLabel,
+                                                   final int labelB, final int dir, final int gEdge, final int gNodeB, int theLabelA, int theLabelB) {
 		super.set(nodeA, nodeB, labelA, edgeLabel, labelB, dir,theLabelA,theLabelB);
 		this.gNodeBi = gNodeB;
 		this.gEdgei = gEdge;

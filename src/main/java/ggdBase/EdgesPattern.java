@@ -1,4 +1,4 @@
-package main.java.GGD;
+package ggdBase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

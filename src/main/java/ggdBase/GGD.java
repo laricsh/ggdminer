@@ -1,4 +1,4 @@
-package main.java.GGD;
+package ggdBase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,8 +9,9 @@ import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.Node;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import minerDataStructures.Embedding;
+import minerDataStructures.Tuple;
+import minerDataStructures.answergraph.AnswerGraph;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -40,9 +41,14 @@ public class GGD<NodeType, EdgeType> {
     public List<Embedding> sourceEmbeddings;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private AnswerGraph<NodeType, EdgeType> sourceAnswerGraph;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private AnswerGraph<NodeType, EdgeType> targetAnswerGraph;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private List<Tuple<String, String>> commonVars;
 
     public GGD(List<GraphPattern<NodeType, EdgeType>> sourceGP, List<Constraint> sourceCons, List<GraphPattern<NodeType, EdgeType>> targetGP, List<Constraint> targetCons,
-               Double confidence, Integer numberMatches_source, Integer numberMatches_target, List<Embedding> sourceEmbeddings, AnswerGraph<NodeType, EdgeType> sourceAnswerGraph){
+               Double confidence, Integer numberMatches_source, Integer numberMatches_target, List<Embedding> sourceEmbeddings, AnswerGraph<NodeType, EdgeType> sourceAnswerGraph,
+               AnswerGraph<NodeType, EdgeType> targetAnswerGraph, List<Tuple<String, String>> commonVars){
         this.sourceGP = sourceGP;
         this.sourceCons = sourceCons;
         this.targetGP = targetGP;
@@ -52,6 +58,8 @@ public class GGD<NodeType, EdgeType> {
         this.numberMatches_target = numberMatches_target;
         this.sourceEmbeddings = sourceEmbeddings;
         this.sourceAnswerGraph = sourceAnswerGraph;
+        this.targetAnswerGraph = targetAnswerGraph;
+        this.commonVars = commonVars;
     }
 
     public List<GraphPattern<NodeType, EdgeType>> getSourceGP() {
@@ -127,7 +135,7 @@ public class GGD<NodeType, EdgeType> {
         File ggdfile = new File(file+"/ggd"+index+".txt");
         ggdfile.createNewFile();
         FileWriter ggdFileWriter = new FileWriter(ggdfile.getAbsoluteFile());
-       ggdFileWriter.write("----Source Graph Pattern:----\n");
+        ggdFileWriter.write("----Source Graph Pattern:----\n");
         for(VerticesPattern<NodeType, NodeType> v: this.sourceGP.get(0).getVertices()){
             ggdFileWriter.write("Node:" + v.nodeVariable.toString() + " Label:" + v.nodeLabel.toString() + "\n");
         }
@@ -143,7 +151,7 @@ public class GGD<NodeType, EdgeType> {
             ggdFileWriter.write("Node:" + v.nodeVariable.toString() + " Label:" + v.nodeLabel.toString() + "\n");
         }
         for(EdgesPattern<NodeType, EdgeType> e: this.targetGP.get(0).getEdges()){
-           ggdFileWriter.write("Edge: " + e.variable.toString() + " Label:" + e.label.toString() + " Source:" + e.sourceVariable.toString() + " Target:" + e.targetVariable + "\n");
+            ggdFileWriter.write("Edge: " + e.variable.toString() + " Label:" + e.label.toString() + " Source:" + e.sourceVariable.toString() + " Target:" + e.targetVariable + "\n");
         }
         ggdFileWriter.write("------Target Cons-----\n");
         for(Constraint cons: targetCons){
@@ -156,7 +164,6 @@ public class GGD<NodeType, EdgeType> {
     }
 
     public void renderGraphViz(String file, Integer id) throws IOException {
-
         List<Node> nodes = new ArrayList<>();
         //List<Link> links = new ArrayList<>();
         for(EdgesPattern<NodeType, EdgeType> edge: this.sourceGP.get(0).getEdges()){
@@ -172,7 +179,7 @@ public class GGD<NodeType, EdgeType> {
 
         Graph gSource = graph("source_" + id)
                 .directed()
-               .graphAttr().with(Rank.dir(TOP_TO_BOTTOM))
+                .graphAttr().with(Rank.dir(TOP_TO_BOTTOM))
                 .graphAttr().with(Label.raw(constraintString(this.sourceCons)))
                 .with(nodes);
 
@@ -243,4 +250,19 @@ public class GGD<NodeType, EdgeType> {
     }
 
 
+    public AnswerGraph<NodeType, EdgeType> getTargetAnswerGraph() {
+        return targetAnswerGraph;
+    }
+
+    public void setTargetAnswerGraph(AnswerGraph<NodeType, EdgeType> targetAnswerGraph) {
+        this.targetAnswerGraph = targetAnswerGraph;
+    }
+
+    public List<Tuple<String, String>> getCommonVars() {
+        return commonVars;
+    }
+
+    public void setCommonVars(List<Tuple<String, String>> commonVars) {
+        this.commonVars = commonVars;
+    }
 }

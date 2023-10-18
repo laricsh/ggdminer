@@ -1,4 +1,4 @@
-package main.java.preProcess.EditDistanceJoiner;
+package preProcess.EditDistanceJoiner;
 /***
 This code belongs to the Tsinghua Database Group
 Under the project available at: https://github.com/lispc/EditDistanceClusterer

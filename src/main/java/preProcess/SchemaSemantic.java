@@ -1,13 +1,13 @@
-package main.java.preProcess;
+package preProcess;
 
 import edu.uniba.di.lacam.kdde.lexical_db.MITWordNet;
 import edu.uniba.di.lacam.kdde.ws4j.RelatednessCalculator;
 import edu.uniba.di.lacam.kdde.ws4j.similarity.WuPalmer;
 import edu.uniba.di.lacam.kdde.ws4j.util.WS4JConfiguration;
-import main.java.minerDataStructures.AttributePair;
-import main.java.minerDataStructures.DataTypes;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
+import minerDataStructures.AttributePair;
+import minerDataStructures.DataTypes;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +26,8 @@ public class SchemaSemantic<NodeType, EdgeType> implements PreProcessSelection {
 
     //get the schema of the graph --> label, property name
     //check possible combinations using WordNet package
-    public SchemaSemantic(PropertyGraph pg, Double similarityThreshold){
-        this.pg = pg;
+    public SchemaSemantic(Double similarityThreshold){
+        this.pg = PropertyGraph.getInstance();
         this.similarityThreshold = similarityThreshold;
         System.out.println("Similarity threshold for schema selection: " + this.similarityThreshold);
     }
@@ -54,8 +54,9 @@ public class SchemaSemantic<NodeType, EdgeType> implements PreProcessSelection {
             for(DataTypes d : types){
                 if(d.label.equals(label)){
                     for(String pr: properties){
+                        if(pr.equals("id") || pr.equals("label")|| pr.equals("previousId")) continue;
                         if(d.data.keySet().contains(pr) && d.data.get(pr).equalsIgnoreCase("String")){
-                           StringProperty.add(new Tuple<String, String>(label, pr));
+                            StringProperty.add(new Tuple<String, String>(label, pr));
                         }else if (d.data.keySet().contains(pr) && d.data.get(pr).equalsIgnoreCase("Number")){
                             NumberProperty.add(new Tuple<String, String>(label, pr));
                         }else if (d.data.keySet().contains(pr) && d.data.get(pr).equalsIgnoreCase("Boolean")){
@@ -73,6 +74,7 @@ public class SchemaSemantic<NodeType, EdgeType> implements PreProcessSelection {
             for(DataTypes d : types){
                 if(d.label.equals(label)){
                     for(String pr: properties){
+                        if(pr.equals("toId") || pr.equals("fromId") || pr.equals("id") || pr.equals("label") || pr.equals("previousId")) continue;
                         if(d.data.keySet().contains(pr) && d.data.get(pr).equalsIgnoreCase("String")){
                             StringProperty.add(new Tuple<String, String>(label, pr));
                         }else if (d.data.keySet().contains(pr) && d.data.get(pr).equalsIgnoreCase("Number")){
@@ -115,7 +117,7 @@ public class SchemaSemantic<NodeType, EdgeType> implements PreProcessSelection {
         System.out.println("WordNet-Based Similarity");
         setAttributesFromGraph();
         List<AttributePair> possibleStringPairs = computePairs(StringProperty, "String");//FilterPerSimilarity(computePairs(StringProperty, "String"));
-        List<AttributePair> possibleNumberPairs = computePairs(NumberProperty, "Double");
+        List<AttributePair> possibleNumberPairs = computePairs(NumberProperty, "Number");
         List<AttributePair> possibleBooleanPairs = (computePairs(BooleanProperty, "Boolean"));
         possibleStringPairs.addAll(possibleNumberPairs);
         possibleStringPairs.addAll(possibleBooleanPairs);

@@ -1,15 +1,16 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.GraphPattern;
-import main.java.grami_directed_subgraphs.dataStructures.*;
-import main.java.grami_directed_subgraphs.search.GSpanExtender;
-import main.java.grami_directed_subgraphs.search.MiningStep;
-import main.java.grami_directed_subgraphs.search.SearchLatticeNode;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
-import main.java.minerDataStructures.answergraph.AGEdge;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import grami_directed_subgraphs.search.MiningStep;
+import grami_directed_subgraphs.search.SearchLatticeNode;
+import ggdBase.GraphPattern;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.search.GSpanExtender;
+import minerDataStructures.Embedding;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
+import minerDataStructures.answergraph.AGEdge;
+import minerDataStructures.answergraph.AnswerGraph;
 
 import java.util.*;
 
@@ -47,7 +48,6 @@ public class GGDExtender<NodeType, EdgeType> extends
         this.first = super.first;
         //first = this;
         this.dummy = super.dummy;
-        //dummy = new TreeSet<Extension<NodeType, EdgeType>>();
         propertyGraph = PropertyGraph.getInstance();
     }
 
@@ -73,16 +73,13 @@ public class GGDExtender<NodeType, EdgeType> extends
             ggdchildren.add(extensionGGD);
             ggdschildrenCodes.add(extension.getHPlistGraph());
             ((GSpanExtension<NodeType, EdgeType>) ext).release();
-           // ((Extension<NodeType, EdgeType>) ext).release();
         }
-        //this.node = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>) node, false);
         System.out.println("Current variables of this code::" + ((DFSCode)node).getCurrentVariables().length);
     }
 
     public AnswerGraph<NodeType, EdgeType> ExtendEmbeddings_AG(final SearchLatticeNode<NodeType, EdgeType> extendedNode, GSpanEdge<NodeType, EdgeType> lastGSpanEdge, AnswerGraph<NodeType, EdgeType> dadAG, Integer size) throws CloneNotSupportedException {
         GraphPattern<NodeType, EdgeType> newPattern = new GraphPattern<NodeType, EdgeType>();
         newPattern.setGraphPatternWithLabels(extendedNode.getHPlistGraph(), this.propertyGraph.getLabelCodes());
-        //System.out.println("Dad ag:" + dadAG.getNodesSize() + " ag:" + dadAG.getEdgesSize());
         return dadAG.newAGExtendEdge(lastGSpanEdge, newPattern);
     }
 
@@ -117,25 +114,24 @@ public class GGDExtender<NodeType, EdgeType> extends
                 List<HashMap<String, String>> edge = newEdges.get(key);
                 String edgevar = thisEmb.pattern.getEdgeVariableLetter(thisEmb.edges.keySet().size());
                 for(HashMap<String, String> thisEdge: edge){
-                   Embedding embedding = new Embedding(thisEmb);
-                   if(embedding.edges.values().contains(thisEdge)){
-                       continue;
-                   }
-                   embedding.edges.put(edgevar,thisEdge);
-                   if(lastGSpanEdge.getDirection() ==1){
-                       HashMap<String, String> node = this.propertyGraph.getNode(thisEdge.get("toId"), this.propertyGraph.getLabelCodes().get(lastGSpanEdge.getLabelB()));
-                       embedding.nodes.put(newNode, node);
-                   }else{
-                       HashMap<String, String> node = this.propertyGraph.getNode(thisEdge.get("fromId"), this.propertyGraph.getLabelCodes().get(lastGSpanEdge.getLabelB()));
-                       embedding.nodes.put(newNode, node);
-                   }
-                   emb.add(embedding);
+                    Embedding embedding = new Embedding(thisEmb);
+                    if(embedding.edges.values().contains(thisEdge)){
+                        continue;
+                    }
+                    embedding.edges.put(edgevar,thisEdge);
+                    if(lastGSpanEdge.getDirection() ==1){
+                        HashMap<String, String> node = this.propertyGraph.getNode(thisEdge.get("toId"), this.propertyGraph.getLabelCodes().get(lastGSpanEdge.getLabelB()));
+                        embedding.nodes.put(newNode, node);
+                    }else{
+                        HashMap<String, String> node = this.propertyGraph.getNode(thisEdge.get("fromId"), this.propertyGraph.getLabelCodes().get(lastGSpanEdge.getLabelB()));
+                        embedding.nodes.put(newNode, node);
+                    }
+                    emb.add(embedding);
                 }
             }
         }else{
             //connected to a node that is already in the embeddings
             //retrieve only edges
-            //HashMap<String, List<HashMap<String, String>>> newEdges = new HashMap<>();
             String fromNode = String.valueOf(lastGSpanEdge.getNodeA());
             String toNode = String.valueOf(lastGSpanEdge.getNodeB());
             if(lastGSpanEdge.getDirection() == -1){
@@ -145,8 +141,8 @@ public class GGDExtender<NodeType, EdgeType> extends
             List<String> fromidsList = new ArrayList<>();
             List<String> toidsList = new ArrayList<>();
             for(Embedding thisEmb: currEmbeddings){
-                    fromidsList.add(thisEmb.nodes.get(fromNode).get("id"));
-                    toidsList.add(thisEmb.nodes.get(toNode).get("id"));
+                fromidsList.add(thisEmb.nodes.get(fromNode).get("id"));
+                toidsList.add(thisEmb.nodes.get(toNode).get("id"));
             }
             HashMap<Tuple<String, String>, List<HashMap<String, String>>> newEdges = this.propertyGraph.findEdges_V2(fromidsList, toidsList, lastGSpanEdge.getEdgeLabel(), lastGSpanEdge.getLabelA(), lastGSpanEdge.getLabelB(), size);
             for(Embedding thisEmb : currEmbeddings){
@@ -168,18 +164,6 @@ public class GGDExtender<NodeType, EdgeType> extends
         return emb;
     }
 
-
-    public Collection<GGDLatticeNode<NodeType, EdgeType>> getHorizontalExpansion(final SearchLatticeNode<NodeType, EdgeType> extendedNode, GSpanEdge<NodeType, EdgeType> lastGSpanEdge){
-        //generate horizontal extension nodes
-        // if (extendedNode instanceof GGDLatticeNode)
-        GGDLatticeNode<NodeType, EdgeType> nodeToExtend = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>)extendedNode);
-        return nodeToExtend.HorizontalExtend((DFSCode<NodeType, EdgeType>) extendedNode, lastGSpanEdge);
-    }
-
-    /*public Collection<GGDLatticeNode<NodeType,EdgeType>> getHorizontalExpansion(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> lastGSpanEdge){
-        return node.HorizontalExtend(lastGSpanEdge);
-    }*/
-
     public Collection<GGDLatticeNode<NodeType,EdgeType>> getHorizontalExpansion_AG(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> lastGSpanEdge) throws CloneNotSupportedException {
         return node.HorizontalExtend_AG(lastGSpanEdge);
     }
@@ -200,53 +184,17 @@ public class GGDExtender<NodeType, EdgeType> extends
                     continue;
                 }
                 AnswerGraph<NodeType, EdgeType> ag = checkOverlapping_AG(parent, child, GGDSearcher.freqThreshold.intValue());
-                if(ag.estimateEmbeddingsSize() >= GGDSearcher.freqThreshold.intValue()){
+                if(ag.getNumberOfEmbeddings() >= GGDSearcher.freqThreshold.intValue()){
                     GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(child);
                     newNode.query.setAnswergraph(ag);
                     newNode.getConstraints().constraints.addAll(parent.getConstraints().constraints);
-                  //  System.out.println("Number of constraints::" + newNode.getConstraints().constraints.size());
                     answer.add(newNode);
                 }
             }
         }
-        //System.out.println("Answer size!!!" + answer.size());
         return answer;
     }
 
-
-
-    public List<Embedding> checkOverlappingEmbeddings(GGDLatticeNode<NodeType, EdgeType> parent, GGDLatticeNode<NodeType, EdgeType> child){
-        List<Embedding> embOverlap = new ArrayList<>();
-        //get common variables
-        Set<String> commonNodes = parent.pattern.getVerticesVariables();
-        //commonNodes.retainAll(child.query.embeddings.get(0).nodes.keySet());
-        Set<String> commonEdges = parent.pattern.getEdgesVariables();
-        //commonEdges.retainAll(child.query.embeddings.get(0).edges.keySet());
-        for(Embedding embParent: parent.query.embeddings){
-            for(Embedding embChild: child.query.embeddings){
-                boolean notAdd = false;
-                for(String s: commonNodes){
-                    if(!embParent.nodes.get(s).get("id").equals(embChild.nodes.get(s).get("id"))){
-                        notAdd = true;
-                        break;
-                    }
-                }
-                if(notAdd){
-                    continue;
-                }
-                for(String s: commonEdges){
-                    if(!embParent.edges.get(s).get("id").equals(embChild.edges.get(s).get("id"))){
-                        notAdd = true;
-                        break;
-                    }
-                }
-                if(!notAdd){
-                    embOverlap.add(embChild);
-                }
-            }
-        }
-        return embOverlap;
-    }
 
 
     public AnswerGraph<NodeType, EdgeType> checkOverlapping_AG(GGDLatticeNode<NodeType, EdgeType> parent, GGDLatticeNode<NodeType, EdgeType> child, Integer support) throws CloneNotSupportedException {
@@ -256,7 +204,7 @@ public class GGDExtender<NodeType, EdgeType> extends
             AGEdge<NodeType, EdgeType> edgeOfThisVar = (AGEdge<NodeType, EdgeType>) parent.query.getAnswergraph().edges.get(var);
             Set<String> edgeIds = edgeOfThisVar.edgeSrcTrg.keySet();
             overlap = overlap.filter(edgeIds, var);
-            if(overlap.estimateEmbeddingsSize() < support){
+            if(overlap.getNumberOfEmbeddings() < support){
                 return overlap;
             }
         }

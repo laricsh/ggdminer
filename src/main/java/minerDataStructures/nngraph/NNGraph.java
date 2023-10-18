@@ -1,4 +1,4 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 /*
 Source code based from https://github.com/tdebatty/java-graphs
 
@@ -50,29 +50,13 @@ Original license:
  * THE SOFTWARE.
  */
 
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.Tuple;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.Tuple;
 
 import java.io.*;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Random;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * k-nn graph, represented as a mapping node => neighborlist.
@@ -1440,6 +1424,27 @@ public class NNGraph<T> implements Serializable {
         graph.close();
     }
 
+    public void printGraphGGDLatticeToFile(String file) throws IOException {
+        Set<T> nodes = this.map.keySet();
+        FileWriter graph = new FileWriter(file);
+        for(T node : nodes){
+            GGDLatticeNode<String, String> latticenode = (GGDLatticeNode<String, String>) node;
+            graph.write("NODE \n");
+            graph.write("Number of similarity constraints:" + latticenode.getConstraints().constraints.size());
+            graph.write(latticenode.prettyString() +"\n");
+            graph.write("NEIGHBORS \n" );
+            int counter = 0;
+            for(Neighbor<T> neighbor: this.map.get(node)){
+                graph.write("Neighbor: " + counter + " similarity:" + neighbor.similarity + "\n");
+                GGDLatticeNode<String, String> neighbornode = (GGDLatticeNode<String, String>) neighbor.node;
+                graph.write("Neighbors \n");
+                graph.write(neighbornode.prettyString());
+                counter++;
+            }
+        }
+        graph.close();
+    }
+
 
     public void computeConfidenceEdges(int k){
         System.out.println("Inserting confidence edges");
@@ -1495,7 +1500,7 @@ public class NNGraph<T> implements Serializable {
             if(el.similarity >= threshold){
                 result.add(el);
             }else{
-                checkNeighborSet.add(new Tuple<Neighbor,Double>(el, el.similarity));
+                checkNeighborSet.add(new Tuple<Neighbor, Double>(el, el.similarity));
             }
         }
         Set<Neighbor> finalResults = new HashSet<>();

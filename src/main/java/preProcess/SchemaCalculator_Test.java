@@ -1,4 +1,4 @@
-package main.java.preProcess;
+package preProcess;
 
 import edu.uniba.di.lacam.kdde.lexical_db.MITWordNet;
 import edu.uniba.di.lacam.kdde.ws4j.RelatednessCalculator;

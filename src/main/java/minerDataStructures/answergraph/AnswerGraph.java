@@ -1,19 +1,21 @@
-package main.java.minerDataStructures.answergraph;
+package minerDataStructures.answergraph;
 
+import DifferentialConstraint.DistanceFunctions;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.googlecode.javaewah.EWAHCompressedBitmap;
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.GraphPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.ggdSearch.GGDSearcher;
-import main.java.grami_directed_subgraphs.dataStructures.Edge;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanEdge;
-import main.java.grami_directed_subgraphs.dataStructures.Graph;
-import main.java.minerDataStructures.*;
+import ggdBase.EdgesPattern;
+import ggdBase.GraphPattern;
+import ggdBase.VerticesPattern;
+import ggdSearch.GGDSearcher;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import minerDataStructures.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import static org.apache.commons.math3.util.CombinatoricsUtils.factorial;
 
 public class AnswerGraph<NodeType, EdgeType> {
 
@@ -24,6 +26,9 @@ public class AnswerGraph<NodeType, EdgeType> {
     GraphPattern<NodeType, EdgeType> query;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     PropertyGraph pg = PropertyGraph.getInstance();
+    Integer support = GGDSearcher.freqThreshold.intValue();
+    DistanceFunctions dist = new DistanceFunctions();
+    List<DecisionBoundaries> boundaries;
 
     public AnswerGraph(GraphPattern<NodeType, EdgeType> qry){
         nodes = new HashMap<>();
@@ -43,8 +48,6 @@ public class AnswerGraph<NodeType, EdgeType> {
             AGEdge<NodeType, EdgeType> previous = edges_.get(var);
             edges.put(var, new AGEdge<NodeType,EdgeType>(previous));
         }
-        //nodes.putAll(nodes_);
-        //edges.putAll(edges_);
     }
 
     public void addNodesOfVariables(String var, Set<String> ids){
@@ -120,32 +123,6 @@ public class AnswerGraph<NodeType, EdgeType> {
         return this.nodes.get(var).nodesIds.and(ag2.nodes.get(var2).nodesIds).cardinality();
     }
 
-    public Integer estimateEmbeddingsSize(){
-        if (this.getNodesSize() == 0) return 0;
-        if(this.query.getEdges().size() == 1){
-            return this.edges.get("A").edgeSrcTrg.keySet().size();
-        }else{
-            return estimateEmbeddingsSizeLowerBound();
-            //return estimateEmbeddingsSizeUpperBound();
-        }
-    }
-
-    public Integer estimateEmbeddingsSizeLowerBound(){
-        Integer max = 0;
-        for(String var: this.edges.keySet()){
-            Integer card = this.edges.get(var).edgesIds.cardinality();
-            if(card > max){
-                max = card;
-            }
-        }
-        return max;
-    }
-
-    //TODO estimate size upper bound
-    public Integer estimateEmbeddingsSizeUpperBound(){
-        return estimateEmbeddingsSizeLowerBound();
-    }
-
     //Error here for intersection
     public AnswerGraph<NodeType, EdgeType> intersect(AnswerGraph<NodeType, EdgeType> ag_2){
         AnswerGraph<NodeType,EdgeType> intersect = new AnswerGraph<>(this.query);
@@ -193,28 +170,8 @@ public class AnswerGraph<NodeType, EdgeType> {
         return NewAg;
     }
 
-
-
-    public AnswerGraph<NodeType,EdgeType> filterNoBurnBack(Set<String> ids, String variable) throws CloneNotSupportedException {
-        AnswerGraph<NodeType,EdgeType> NewAg = new AnswerGraph<NodeType,EdgeType>(this.query, this.nodes, this.edges);
-        if(this.query.getVerticesVariables().contains(variable)){
-            Set<String> nodesToRemove = new HashSet<>();
-            nodesToRemove.addAll(this.nodes.get(variable).vertices.keySet());
-            nodesToRemove.removeAll(ids);
-            NewAg.removeNodes(nodesToRemove, variable, false);
-        }else{
-            Set<String> edgesToRemove = new HashSet<>();
-            edgesToRemove.addAll(this.edges.get(variable).edgeSrcTrg.keySet());
-            edgesToRemove.removeAll(ids);
-            NewAg.removeEdges(edgesToRemove, variable, false);
-        }
-        return NewAg;
-    }
-
     public void removeNodes(Set<String> idsToRemove, String variable, boolean burnBack){
         for(String id: idsToRemove){
-            //this.nodes.get(variable).nodesIds.clear(Integer.valueOf(id));
-            //this.nodes.get(variable).vertices.remove(id);
             if(burnBack){
                 removeNodeBurnBack(variable, id);
             }
@@ -232,7 +189,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                     String targetVar = this.edges.get(variable).edge.targetVariable.toString();
                     if(this.nodes.get(sourceVar).vertices.containsKey(removedEdge.x)){
                         VertexEntry<NodeType, EdgeType> source = (VertexEntry<NodeType, EdgeType>) this.nodes.get(sourceVar).vertices.get(removedEdge.x);
-                        if(source.getAdjacentEdgesOutgoing().size() == 1 && source.getAdjacentEdgesOutgoing().firstElement().x.equals(id)){
+                        if(source.getAdjacentEdgesOutgoing().size() == 1 && source.getAdjacentEdgesOutgoing().iterator().next().x.equals(id)){//.firstElement().x.equals(id)){
                             removeNodeBurnBack(sourceVar, removedEdge.x);
                         }else {
                             int i = 1;
@@ -246,7 +203,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                     }
                     if(this.nodes.get(targetVar).vertices.containsKey(removedEdge.y)){
                         VertexEntry<NodeType, EdgeType> target = (VertexEntry<NodeType, EdgeType>) this.nodes.get(targetVar).vertices.get(removedEdge.y);
-                        if(target.getAdjacenteEdgesIngoing().size() == 1 && target.getAdjacenteEdgesIngoing().firstElement().x.equals(id)){
+                        if(target.getAdjacenteEdgesIngoing().size() == 1 && target.getAdjacenteEdgesIngoing().iterator().next().x.equals(id)){//.firstElement().x.equals(id)){
                             removeNodeBurnBack(targetVar, removedEdge.y);
                         }else{
                             int i = 1;
@@ -264,7 +221,6 @@ public class AnswerGraph<NodeType, EdgeType> {
     }
 
     public void filter_tmp(Set<String> ids, String variable){
-        //AnswerGraph<NodeType,EdgeType> NewAg = new AnswerGraph<NodeType,EdgeType>(this.query, this.nodes, this.edges);
         if(this.query.getVerticesVariables().contains(variable)){
             AGVertex<NodeType, EdgeType> newVertex = new AGVertex<>(this.query.getLabelOfThisVariable(variable));
             this.nodes.put(variable, newVertex);
@@ -277,7 +233,7 @@ public class AnswerGraph<NodeType, EdgeType> {
     }
 
     public AnswerGraph<NodeType,EdgeType> filter_2(Set<String> ids1, Set<String> ids2, String var1, String var2) throws CloneNotSupportedException {
-        AnswerGraph<NodeType,EdgeType> NewAg = this.filter(ids1, var1).filter(ids2, var2);//this.filterNoBurnBack(ids1, var1).filter(ids2, var2);
+        AnswerGraph<NodeType,EdgeType> NewAg = this.filter(ids1, var1).filter(ids2, var2);
         return NewAg;
     }
 
@@ -379,19 +335,6 @@ public class AnswerGraph<NodeType, EdgeType> {
         }
     }
 
-
-    public void nodeBurnBackBackwardEdge(List<Tuple<String, String>> srcTrg, String sourceVar, String targetVar){
-        Set<String> idstoBeChecked_A = new HashSet<>();
-        Set<String> idsToBeChecked_B = new HashSet<>();
-        for(Tuple<String, String> tuple: srcTrg){
-
-            idstoBeChecked_A.add(tuple.x);
-            idsToBeChecked_B.add(tuple.y);
-        }
-        nodeBurnBack(idstoBeChecked_A, sourceVar);
-        nodeBurnBack(idsToBeChecked_B, targetVar);
-    }
-
     public void nodeBurnBackBackwardEdge_remove(List<Tuple<String, String>> srcTrg, String sourceVar, String targetVar){
         for(Tuple<String, String> tuple: srcTrg){
             VertexEntry<NodeType, EdgeType> source = (VertexEntry<NodeType, EdgeType>) this.nodes.get(sourceVar).vertices.get(tuple.x);
@@ -446,14 +389,14 @@ public class AnswerGraph<NodeType, EdgeType> {
         //find all new edges from lastGSpan
         String varSource = String.valueOf(lastGSpanEdge.getNodeA());
         String varTarget = String.valueOf(lastGSpanEdge.getNodeB());
-        int labelA = lastGSpanEdge.getLabelA();
-        int labelB = lastGSpanEdge.getLabelB();
+        int labelA = lastGSpanEdge.getThelabelA();
+        int labelB = lastGSpanEdge.getThelabelB();
         List<Tuple<String, String>> burnbackNodesFrom = new LinkedList<>();
         if(lastGSpanEdge.getDirection() == -1){
-            varSource = varTarget;
+            varSource = String.valueOf(lastGSpanEdge.getNodeB());
             varTarget = String.valueOf(lastGSpanEdge.getNodeA());
-            labelA = labelB;
-            labelB = lastGSpanEdge.getLabelA();
+            labelA = lastGSpanEdge.getThelabelB();
+            labelB = lastGSpanEdge.getThelabelA();
         } //add all edges found according to the variable
         if(nodes.containsKey(varTarget) && nodes.containsKey(varSource)){ //if the target already exists then it is a backward edge
             //only get new edges
@@ -462,7 +405,7 @@ public class AnswerGraph<NodeType, EdgeType> {
             List<String> nodeIdsTarget = new LinkedList<>();
             nodeIdsTarget.addAll(getNodeIds(varTarget));
             Set<String> newEdges = new HashSet<>();
-            //Set<String> newEdges = this.pg.findEdgesOnlyIds(nodeIdsSource, nodeIdsTarget, lastGSpanEdge.getEdgeLabel(), labelA, labelB,0);
+            System.out.println("Backward edge! - Node Burn Back");
             for (String fromId : nodeIdsSource) {
                 for (String toId : nodeIdsTarget) {
                     if (this.pg.getFromIdEdges().get(label).containsKey(fromId) && this.pg.getToIdEdges().get(label).containsKey(toId)) {
@@ -475,11 +418,13 @@ public class AnswerGraph<NodeType, EdgeType> {
                     }
                 }
             }
+            System.out.println("Node Burn Back completed");
             String edgeVar = this.query.getEdgeVariableLetter(newPattern.getEdges().size()-1);
             if(newEdges.isEmpty()){
                 return new AnswerGraph<>(this.query);
             }
             newAg.addEdgesOfVariables(edgeVar, newEdges);
+            System.out.println("Backward edge added!!");
             newAg.nodeBurnBackBackwardEdge_remove(burnbackNodesFrom, varSource, varTarget);
         }else if(nodes.containsKey(varSource)){//if the target does not exist then it is a forward edge therefore nodes and edges needs to be added
             List<String> nodeIdsSource = new LinkedList<>();
@@ -488,18 +433,30 @@ public class AnswerGraph<NodeType, EdgeType> {
             Set<String> fromIds_graph = new HashSet<>();
             fromIds_graph.addAll(this.pg.getFromIdEdges().get(label).keySet());
             fromIds_graph.retainAll(nodeIdsSource);
+            System.out.println("Getting edges from the graph");
             for(String fromId: fromIds_graph){
                 List<String> edgeId = this.pg.getFromIdEdges().get(label).get(fromId);
-                newEdges.addAll(edgeId);
+                for(String eId : edgeId){
+                    if(this.pg.getVerticesProperties_Id().get(this.pg.getLabelCodes().get(labelB)).containsKey(this.pg.getEdge(eId, label).get("toId"))){
+                        if(this.pg.getEdge(eId, label).get("toId").equals("36407")){
+                            System.out.println(lastGSpanEdge.toString());
+                            System.out.println(this.pg.getLabelCodes().get(labelB));
+                            System.out.println("Aqui!!!!");
+                        }
+                        newEdges.addAll(edgeId);
+                    }
+                }
             }
             nodeIdsSource.removeAll(fromIds_graph);
+            System.out.println("Remove edges at the graph");
             String edgeVar = this.query.getEdgeVariableLetter(newPattern.getEdges().size()-1);
             if(newEdges.isEmpty()){
                 return new AnswerGraph<>(this.query);
             }
             newAg.addEdgesOfVariables(edgeVar, newEdges);
-            //newAg.nodeBurnBackForwardEdge(nodeIdsSource, varSource);
+            System.out.println("Edges of variable " + edgeVar + " added - start Node Burn Back" );
             newAg.nodeBurnBack_remove(nodeIdsSource, varSource);
+            System.out.println(" Node burn back completed!");
         }else if(nodes.containsKey(varTarget)){
             Set<String> nodeIdsTarget = new HashSet<>();
             nodeIdsTarget.addAll(getNodeIds(varTarget));
@@ -507,20 +464,32 @@ public class AnswerGraph<NodeType, EdgeType> {
             Set<String> toIds_graph = new HashSet<>();
             toIds_graph.addAll(this.pg.getToIdEdges().get(label).keySet());
             toIds_graph.retainAll(nodeIdsTarget);
-            //System.out.println("To Ids size:::" + toIds_graph.size());
+            System.out.println("Getting edges from the graph");
             for(String toId: toIds_graph){ //these are edge ids not other ids
                 List<String> edgeId = this.pg.getToIdEdges().get(label).get(toId);
-                newEdges.addAll(edgeId);
+                for(String eId : edgeId){
+                    if(this.pg.getVerticesProperties_Id().get(this.pg.getLabelCodes().get(labelB)).containsKey(this.pg.getEdge(eId, label).get("fromId"))){
+                        if(this.pg.getEdge(eId, label).get("fromId").equals("36407")){
+                            System.out.println(lastGSpanEdge.toString());
+                            System.out.println(this.pg.getLabelCodes().get(labelB));
+                            System.out.println("Aqui!!!! from id");
+                        }
+                        newEdges.addAll(edgeId);
+                    }
+                }
             }
             nodeIdsTarget.removeAll(toIds_graph);
+            System.out.println("Remove edges at the graph");
             String edgeVar = this.query.getEdgeVariableLetter(newPattern.getEdges().size()-1);
             if(newEdges.size() == 0){
                 return new AnswerGraph<>(this.query);
             }
             newAg.addEdgesOfVariables(edgeVar, newEdges);
+            System.out.println("Edges of variable " + edgeVar + " added - start Node Burn Back" );
             List<String> nodeIdsTargetToRemove = new LinkedList<>();
             nodeIdsTargetToRemove.addAll(nodeIdsTarget);
             newAg.nodeBurnBack_remove(nodeIdsTargetToRemove, varTarget);
+            System.out.println(" Node burn back completed!");
         }
         return newAg;
     }
@@ -530,40 +499,97 @@ public class AnswerGraph<NodeType, EdgeType> {
         addNodesOfVariables("0", idsOfThisLabel);
     }
 
-    public void initializeSingleEdgePatterns(){
+    public void initializeSingleEdgePatterns_V2(){
         EdgesPattern<NodeType, EdgeType> edgePattern = this.query.getEdges().iterator().next();
         String edgeLabel = edgePattern.label.toString();
-        Set<String> edgeIds = PropertyGraph.getInstance().getEdgesProperties_Id().get(edgeLabel).keySet();
-        addEdgesOfVariables("A", edgeIds);
+        String sourceLabel = edgePattern.sourceLabel.toString();
+        String targetLabel = edgePattern.targetLabel.toString();
+        Set<String> sourceIds = PropertyGraph.getInstance().getVerticesProperties_Id().get(sourceLabel).keySet();
+        HashMap<String, List<String>> fromIds = PropertyGraph.getInstance().getFromIdEdges().get(edgeLabel);
+        Set<String> edgesToAdd = new HashSet<>();
+        for(String idSource: sourceIds){
+            if(!fromIds.containsKey(idSource)){
+                continue;
+            }
+            List<String> edgeids = fromIds.get(idSource);
+            for(String edgeId : edgeids){
+                String toId = PropertyGraph.getInstance().getEdgesProperties_Id().get(edgeLabel).get(edgeId).get("toId");
+                if(PropertyGraph.getInstance().getVerticesProperties_Id().get(targetLabel).containsKey(toId)){
+                    edgesToAdd.add(edgeId);
+                }
+            }
+        }
+        addEdgesOfVariables("A", edgesToAdd);
     }
 
-    public List<Tuple4<String>> getValuePair(String var, AttributePair pair){
-        List<Tuple4<String>> answer = new ArrayList<>();
+    public DecisionBoundaries getDecisionBoundaries(String datatype){
+        for(DecisionBoundaries b: GGDSearcher.decisionBoundaries){
+            if(b.dataType.equalsIgnoreCase(datatype)){
+                return b;
+            }
+        }
+        return null;
+    }
+
+
+    public Double getDistanceValuePair(Tuple4<String> p, AttributePair pair){
+        DecisionBoundaries thisBound = getDecisionBoundaries(pair.datatype);
+        if (p.v1 == null || p.v3 == null || p.v1.equalsIgnoreCase("") || p.v3.equalsIgnoreCase("")) return null;
+        if (p.v1.isEmpty() || p.v3.isEmpty()) return null;
+        if (p.v1.length() > p.v3.length() && p.v1.length() - p.v3.length() > thisBound.minThreshold) {
+            return null;
+        }
+        if (p.v3.length() > p.v1.length() && p.v3.length() - p.v1.length() > thisBound.minThreshold) {
+            return null;
+        }
+        Double distance = dist.calculateDistance(p.v1, p.v3, pair.datatype);
+        if(!distance.isNaN() && distance <= thisBound.minThreshold) {
+            return distance;
+        }else return null;
+    }
+
+    public HashMap<AttributePair, List<Tuple4<String>>> getAllValuePairs(String var, List<AttributePair> pairs){
         String label = query.getLabelOfThisVariable(var);
         List<HashMap<String, String>> varTable = new LinkedList<>();
+        HashMap<AttributePair, List<Tuple4<String>>> answer = new HashMap<>();
         if(this.nodes.containsKey(var)){
             Set<String> ids = this.nodes.get(var).vertices.keySet(); //set of all vertices ids in this answer graph
             for(String id: ids){
-                HashMap<String, String> row = pg.getVerticesProperties_Id().get(label).get(id);
-                String value1 = row.get(pair.attributeName1);
-                String value2 = row.get(pair.attributeName2);
-                answer.add(new Tuple4<String>(value1, id, value2, id));
+                for(AttributePair pair: pairs){
+                    HashMap<String, String> row = pg.getVerticesProperties_Id().get(label).get(id);
+                    String value1 = row.get(pair.attributeName1);
+                    String value2 = row.get(pair.attributeName2);
+                    if(answer.containsKey(pair)){
+                        answer.get(pair).add(new Tuple4<String>(value1, id, value2, id));
+                    }else{
+                        List<Tuple4<String>> list = new ArrayList<>();
+                        list.add(new Tuple4<String>(value1, id, value2, id));
+                        answer.put(pair, list);
+                    }
+                }
             }
-        }else{
+        }else {
             Set<String> ids = this.edges.get(var).edgeSrcTrg.keySet(); //set of all vertices ids in this answer graph
             for(String id: ids){
-                HashMap<String, String> row = pg.getEdgesProperties_Id().get(label).get(id);
-                String value1 = row.get(pair.attributeName1);
-                String value2 = row.get(pair.attributeName2);
-                answer.add(new Tuple4<String>(value1, id, value2, id));
+                for(AttributePair pair: pairs){
+                    HashMap<String, String> row = pg.getVerticesProperties_Id().get(label).get(id);
+                    String value1 = row.get(pair.attributeName1);
+                    String value2 = row.get(pair.attributeName2);
+                    if(answer.containsKey(pair)){
+                        answer.get(pair).add(new Tuple4<String>(value1, id, value2, id));
+                    }else{
+                        List<Tuple4<String>> list = new ArrayList<>();
+                        list.add(new Tuple4<String>(value1, id, value2, id));
+                        answer.put(pair, list);
+                    }
+                }
             }
         }
         return answer;
     }
 
-    public List<Tuple4<String>> getValuePairSingleEdge(String var1, String var2, AttributePair pair){
-        //if the pattern has only one edge then every edge represents a single embedding
-        List<Tuple4<String>> answer = new ArrayList<>();
+    public HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> getAllValuePairsSingleEdge(String var1, String var2, List<AttributePair> pairs){
+        HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> answer = new HashMap<>();
         if(this.edges.containsKey(var1) || this.edges.containsKey(var2)) {
             String edgeVar = var1;
             String nodeVar = var2;
@@ -573,80 +599,370 @@ public class AnswerGraph<NodeType, EdgeType> {
             }
             Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
             EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
-            for(String edgeId : edges.keySet()){
-                Tuple<String,String> srcTrg = edges.get(edgeId);
-                //get edgeId attribute
-                String value1 = null;
-                String id1 = null;
-                String id2 = null;
-                String value2 = null;
-                if(edgeVar.equals(var1.toString())){
-                    id1 = edgeId;
-                    value1 = this.pg.getEdgesProperties_Id().get(pair.label1).get(edgeId).get(pair.attributeName1);
-                }else{
-                    id2 = edgeId;
-                    value2 = this.pg.getEdgesProperties_Id().get(pair.label2).get(edgeId).get(pair.attributeName2);
+            for(String edgeId : edges.keySet()) {
+                for (AttributePair pair : pairs) {
+                    Tuple<String, String> srcTrg = edges.get(edgeId);
+                    //get edgeId attribute
+                    String value1 = null;
+                    String id1 = null;
+                    String id2 = null;
+                    String value2 = null;
+                    if (edgeVar.equals(var1.toString())) {
+                        id1 = edgeId;
+                        value1 = this.pg.getEdgesProperties_Id().get(pair.label1).get(edgeId).get(pair.attributeName1);
+                    } else {
+                        id2 = edgeId;
+                        value2 = this.pg.getEdgesProperties_Id().get(pair.label2).get(edgeId).get(pair.attributeName2);
+                    }
+                    String nodeId;
+                    if (edgeP.targetVariable.toString().equals(nodeVar)) {
+                        nodeId = srcTrg.y;
+                    } else if (edgeP.sourceVariable.toString().equals(nodeVar)) {
+                        nodeId = srcTrg.x;
+                    } else {
+                        System.out.println("this variable does not exist!");
+                        return null;
+                    }
+                    if (nodeVar.toString().equals(var1)) {
+                        id1 = nodeId;
+                        value1 = this.pg.getVerticesProperties_Id().get(pair.label1).get(nodeId).get(pair.attributeName1);
+                    } else {
+                        id2 = nodeId;
+                        value2 = this.pg.getVerticesProperties_Id().get(pair.label2).get(nodeId).get(pair.attributeName2);
+                    }
+                    if (value1 == null) value1 = "";
+                    if (id1 == null) id1 = "";
+                    if (id2 == null) id2 = "";
+                    if (value2 == null) value2 = "";
+                    Tuple4<String> p = new Tuple4<>(value1, id1, value2, id2);
+                    Double distance = getDistanceValuePair(p, pair);
+                    if (distance != null) {
+                        if(answer.containsKey(pair)){
+                            if (answer.get(pair).containsKey(distance)) {
+                                //update list
+                                answer.get(pair).get(distance).add(new Tuple<>(p, 1));
+                            } else {
+                                List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                                list.add(new Tuple<>(p, 1));
+                                answer.get(pair).put(distance, list);
+                            }
+                        }else {
+                            TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>> tree = new TreeMap<>();
+                            List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                            list.add(new Tuple<>(p, 1));
+                            tree.put(distance, list);
+                            answer.put(pair, tree);
+                        }
+                    }
                 }
-                String nodeId;
-                if(edgeP.targetVariable.toString().equals(nodeVar)){
-                    nodeId = srcTrg.y;
-                }else if(edgeP.sourceVariable.toString().equals(nodeVar)){
-                    nodeId = srcTrg.x;
-                }else{
-                    System.out.println("this variable does not exist!");
-                    return null;
-                }
-                if(nodeVar.toString().equals(var1)){
-                    id1 = nodeId;
-                    value1 = this.pg.getVerticesProperties_Id().get(pair.label1).get(nodeId).get(pair.attributeName1);
-                }else{
-                    id2 = nodeId;
-                    value2 = this.pg.getVerticesProperties_Id().get(pair.label2).get(nodeId).get(pair.attributeName2);
-                }
-                if(value1 == null) value1 = "";
-                if(id1 == null) id1 = "";
-                if(id2 == null) id2 = "";
-                if(value2 == null) value2 = "";
-                answer.add(new Tuple4<>(value1, id1, value2,id2));
             }
         }else{
             //if there is not an edge involved then both variables are nodes
             String edgeVar = this.query.getEdgesVariables().iterator().next();
             Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
             EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
-            for(String edgeId : edges.keySet()){
-                Tuple<String,String> srcTrg = edges.get(edgeId);
-                String value1 = null;
-                String id1 = null;
-                String id2 = null;
-                String value2 = null;
-                if(var1.equals(edgeP.sourceVariable.toString())){
-                    id1 = srcTrg.x;
-                    value1 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel).get(id1).get(pair.attributeName1);
-                }else if(var1.equals(edgeP.targetVariable.toString())){
-                    id1 = srcTrg.y;
-                    value1 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel).get(id1).get(pair.attributeName1);
-                }
-                if(var2.equals(edgeP.sourceVariable.toString())){
-                    id2 = srcTrg.x;
-                    value2 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel).get(id2).get(pair.attributeName2);
+            for(String edgeId : edges.keySet()) {
+                    for (AttributePair pair : pairs) {
+                    Tuple<String, String> srcTrg = edges.get(edgeId);
+                    String value1 = null;
+                    String id1 = null;
+                    String id2 = null;
+                    String value2 = null;
+                    if (var1.equals(edgeP.sourceVariable.toString())) {
+                        id1 = srcTrg.x;
+                        value1 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel).get(id1).get(pair.attributeName1);
+                    } else if (var1.equals(edgeP.targetVariable.toString())) {
+                        id1 = srcTrg.y;
+                        value1 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel).get(id1).get(pair.attributeName1);
+                    }
+                    if (var2.equals(edgeP.sourceVariable.toString())) {
+                        id2 = srcTrg.x;
+                        value2 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel).get(id2).get(pair.attributeName2);
 
-                }else if(var2.equals(edgeP.targetVariable.toString())){
-                    id2 = srcTrg.y;
-                    value2 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel).get(id2).get(pair.attributeName2);
+                    } else if (var2.equals(edgeP.targetVariable.toString())) {
+                        id2 = srcTrg.y;
+                        value2 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel).get(id2).get(pair.attributeName2);
+                    }
+                    if (value1 == null) value1 = "";
+                    if (id1 == null) id1 = "";
+                    if (id2 == null) id2 = "";
+                    if (value2 == null) value2 = "";
+                    Tuple4<String> p = new Tuple4<>(value1, id1, value2, id2);
+                    Double distance = getDistanceValuePair(p, pair);
+                    if (distance != null) {
+                        if(answer.containsKey(pair)){
+                            if (answer.get(pair).containsKey(distance)) {
+                                //update list
+                                answer.get(pair).get(distance).add(new Tuple<>(p, 1));
+                            } else {
+                                List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                                list.add(new Tuple<>(p, 1));
+                                answer.get(pair).put(distance, list);
+                            }
+                        }else {
+                            TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>> tree = new TreeMap<>();
+                            List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                            list.add(new Tuple<>(p, 1));
+                            tree.put(distance, list);
+                            answer.put(pair, tree);
+                        }
+                    }
                 }
-                if(value1 == null) value1 = "";
-                if(id1 == null) id1 = "";
-                if(id2 == null) id2 = "";
-                if(value2 == null) value2 = "";
-                answer.add(new Tuple4<>(value1, id1, value2,id2));
             }
         }
         return answer;
     }
 
-    public List<Tuple4<String>> getValuePairNotConnected(String var1, String var2, AttributePair pair){
-        List<Tuple4<String>> answer = new ArrayList<>();
+
+    public HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> getAllValuePairNoSingleEdge(String var1, String var2, List<AttributePair> pairs){
+        HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> answer = new HashMap<>();
+        if(this.edges.containsKey(var1) || this.edges.containsKey(var2)) {
+            String edgeVar = var1;
+            String nodeVar = var2;
+            if(this.edges.containsKey(var2)){
+                nodeVar = var1;
+                edgeVar = var2;
+            }
+            Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
+            EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
+            for(String edgeId : edges.keySet()) {
+                for (AttributePair pair : pairs) {
+                    Tuple<String, String> srcTrg = edges.get(edgeId);
+                    //get edgeId attribute
+                    String value1 = null;
+                    String id1 = null;
+                    String id2 = null;
+                    String value2 = null;
+                    if (edgeVar.toString().equals(var1)) {
+                        id1 = edgeId;
+                        value1 = this.pg.getEdgesProperties_Id().get(pair.label1).get(edgeId).get(pair.attributeName1);
+                    } else {
+                        id2 = edgeId;
+                        value2 = this.pg.getEdgesProperties_Id().get(pair.label2).get(edgeId).get(pair.attributeName2);
+                    }
+                    String nodeId;
+                    if (edgeP.targetVariable.toString().equals(nodeVar)) {
+                        nodeId = srcTrg.y;
+                    } else if (edgeP.sourceVariable.toString().equals(nodeVar)) {
+                        nodeId = srcTrg.x;
+                    } else {
+                        System.out.println("this variable does not exist!");
+                        return null;
+                    }
+                    if (nodeVar.toString().equals(var1)) {
+                        id1 = nodeId;
+                        value1 = this.pg.getVerticesProperties_Id().get(pair.label1).get(nodeId).get(pair.attributeName1);
+                    } else {
+                        id2 = nodeId;
+                        value2 = this.pg.getVerticesProperties_Id().get(pair.label2).get(nodeId).get(pair.attributeName2);
+                    }
+                    if (value1 == null) value1 = "";
+                    if (id1 == null) id1 = "";
+                    if (id2 == null) id2 = "";
+                    if (value2 == null) value2 = "";
+                    Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(edgeVar, edgeId, false);
+                    Tuple4<String> p = new Tuple4<>(value1, id1, value2, id2);
+                    Double distance = getDistanceValuePair(p, pair);
+                    if (distance != null) {
+                        if(answer.containsKey(pair)){
+                            if (answer.get(pair).containsKey(distance)) {
+                                //update list
+                                List<Tuple<Tuple4<String>, Integer>> newAns = new ArrayList<>();;
+                                answer.get(pair).get(distance).add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                            } else {
+                                List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                                list.add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                                answer.get(pair).put(distance, list);
+                            }
+                        }else {
+                            TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>> tree = new TreeMap<>();
+                            List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                            list.add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                            tree.put(distance, list);
+                            answer.put(pair, tree);
+                        }
+                    }
+                }
+            }
+        }else{
+            Set<EdgesPattern<NodeType, EdgeType>> edgesVar = this.query.getEdgesOfNodes(var1, var2);
+            for (EdgesPattern<NodeType, EdgeType> edge : edgesVar) {
+                String edgeVar = (String) edge.variable;
+                Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
+                EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
+                for (String edgeId : edges.keySet()) {
+                    for (AttributePair pair : pairs) {
+                        Tuple<String, String> srcTrg = edges.get(edgeId);
+                        String value1 = null;
+                        String id1 = null;
+                        String id2 = null;
+                        String value2 = null;
+                        try {
+                            if (var1.equals(edgeP.sourceVariable.toString())) {
+                                id1 = srcTrg.x;
+                                value1 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel.toString()).get(id1).get(pair.attributeName1);
+                            } else if (var1.equals(edgeP.targetVariable.toString())) {
+                                id1 = srcTrg.y;
+                                value1 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel.toString()).get(id1).get(pair.attributeName1);
+                            }
+                            if (var2.equals(edgeP.sourceVariable.toString())) {
+                                id2 = srcTrg.x;
+                                value2 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel.toString()).get(id2).get(pair.attributeName2);
+
+                            } else if (var2.equals(edgeP.targetVariable.toString())) {
+                                id2 = srcTrg.y;
+                                value2 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel.toString()).get(id2).get(pair.attributeName2);
+                            }
+                        }catch (Exception e){
+                            continue;
+                        }
+                        if (value1 == null) value1 = "";
+                        if (id1 == null) id1 = "";
+                        if (id2 == null) id2 = "";
+                        if (value2 == null) value2 = "";
+                        Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(edgeVar, edgeId, false);
+                        Tuple4<String> p = new Tuple4<>(value1, id1, value2, id2);
+                        Double distance = getDistanceValuePair(p, pair);
+                        if (distance != null) {
+                            if(answer.containsKey(pair)){
+                                if (answer.get(pair).containsKey(distance)) {
+                                    //update list
+                                    List<Tuple<Tuple4<String>, Integer>> newAns = new ArrayList<>();;
+                                    answer.get(pair).get(distance).add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                                } else {
+                                    List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                                    list.add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                                    answer.get(pair).put(distance, list);
+                                }
+                            }else {
+                                TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>> tree = new TreeMap<>();
+                                List<Tuple<Tuple4<String>, Integer>> list = new ArrayList<>();
+                                list.add(new Tuple<>(new Tuple4<>(value1, id1, value2, id2), numberOfEmbeddings));
+                                tree.put(distance, list);
+                                answer.put(pair, tree);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return answer;
+    }
+
+    public List<Tuple4<String>> getAllValuePairNoSingleEdge_NeqPairs(String var1, String var2, String label){
+        List<Tuple4<String>> answer = new LinkedList<>();
+        Set<EdgesPattern<NodeType, EdgeType>> edgesVar = this.query.getEdgesOfNodes(var1, var2);
+        for (EdgesPattern<NodeType, EdgeType> edge : edgesVar) {
+             String edgeVar = (String) edge.variable;
+             Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
+             EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
+             for (String edgeId : edges.keySet()) {
+                        Tuple<String, String> srcTrg = edges.get(edgeId);
+                        String id1 = null;
+                        String id2 = null;
+                        if (var1.equals(edgeP.sourceVariable.toString())) {
+                            id1 = srcTrg.x;
+                        } else if (var1.equals(edgeP.targetVariable.toString())) {
+                            id1 = srcTrg.y;
+                        }
+                        if (var2.equals(edgeP.sourceVariable.toString())) {
+                            id2 = srcTrg.x;
+                        } else if (var2.equals(edgeP.targetVariable.toString())) {
+                            id2 = srcTrg.y;
+                        }
+                        if(!id1.equals(id2)){
+                            if (id1 == null) id1 = "";
+                            if (id2 == null) id2 = "";
+                            Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(edgeVar, edgeId, false);
+                            answer.addAll(Collections.nCopies(numberOfEmbeddings, new Tuple4<>(id1, id1, id2, id2)));
+                        }
+                }
+            }
+        return answer;
+    }
+
+    public List<Tuple4<String>> getAllValuePairNotConnected_NeqPairs(String var1, String var2, String label) {
+        List<Tuple4<String>> answer = new LinkedList<>();
+        List<String> shortestPath = this.query.isConnectedHops(var1,var2);
+        List<EmbeddingId> embIds = new LinkedList<>();
+        List<EdgesPattern<NodeType, EdgeType>> edgesForThisPath = new LinkedList<>();
+        List<String> variablesForThisPath = new LinkedList<>();
+        if(isSnowflake(this.query)){
+            Tuple<String, Integer> hubVariable = getSnowflakeCenter(this.query);
+            AGVertex<NodeType, EdgeType> agvertex = this.nodes.get(hubVariable.x);
+            if(hubVariable.y.equals(1)){
+            for(String hubId : agvertex.vertices.keySet()) {
+                Set<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacentEdgesOutgoing();
+                HashMap<String, Set<String>> map = new HashMap<>();
+                for(Tuple<String, String> edgeTarget : v){
+                    for(EdgesPattern<NodeType, EdgeType> edges: this.query.getEdges()) {
+                        String edgeVariable = edges.variable.toString();
+                        String nodeVar = edges.targetVariable.toString();
+                        if (this.edges.get(edgeVariable).edgeSrcTrg.containsKey(edgeTarget.x)) {
+                            if(nodeVar.equals(var1)|| nodeVar.equals(var2)){
+                                if (map.containsKey(nodeVar)) {
+                                    map.get(nodeVar).add(edgeTarget.y);
+                                } else {
+                                    Set<String> trgt = new HashSet<>();
+                                    trgt.add(edgeTarget.y);
+                                    map.put(nodeVar, trgt);
+                                }
+                            }
+                        }
+                    }
+                }
+                answer.addAll(getTuplePairsMap(map, var1, var2));
+            }
+            return answer;
+        }
+        else if(hubVariable.y.equals(-1)) {
+                for (String hubId : agvertex.vertices.keySet()) {
+                    Set<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacenteEdgesIngoing();
+                    HashMap<String, Set<String>> map = new HashMap<>();
+                    for (Tuple<String, String> edgeTarget : v) {
+                        for (EdgesPattern<NodeType, EdgeType> edges : this.query.getEdges()) {
+                            String edgeVariable = edges.variable.toString();
+                            String nodeVar = edges.sourceVariable.toString();
+                            if (this.edges.get(edgeVariable).edgeSrcTrg.containsKey(edgeTarget.x)) {
+                                if(nodeVar.equals(var1)|| nodeVar.equals(var2)){
+                                    if (map.containsKey(nodeVar)) {
+                                        map.get(nodeVar).add(edgeTarget.y);
+                                    } else {
+                                        Set<String> trgt = new HashSet<>();
+                                        trgt.add(edgeTarget.y);
+                                        map.put(nodeVar, trgt);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    answer.addAll(getTuplePairsMap(map, var1, var2));
+                }
+                return answer;
+            }
+        } else{
+            System.out.println("not connected neq pairs");
+            return getAllValuePairNotConnected_NeqPairsV1(var1, var2, label);
+        }
+        return answer;
+    }
+
+    public List<Tuple4<String>> getTuplePairsMap(HashMap<String, Set<String>> map, String var1, String var2){
+        System.out.println("get tuple pairs map");
+        List<Tuple4<String>> answer = new LinkedList<>();
+        Set<String> var1Ids = map.get(var1);
+        Set<String> var2Ids = map.get(var2);
+        for(String id1 : var1Ids){
+            for(String id2: var2Ids){
+                answer.add(new Tuple4<>(id1, id1, id2, id2));
+            }
+        }
+    return answer;
+    }
+
+
+        public List<Tuple4<String>> getAllValuePairNotConnected_NeqPairsV1(String var1, String var2, String label){
+        List<Tuple4<String>> answer = new LinkedList<>();
         List<String> shortestPath = this.query.isConnectedHops(var1,var2);
         List<EmbeddingId> embIds = new LinkedList<>();
         List<EdgesPattern<NodeType, EdgeType>> edgesForThisPath = new LinkedList<>();
@@ -737,150 +1053,132 @@ public class AnswerGraph<NodeType, EdgeType> {
                 embIds = newEmbeddings;
             }
         }
-        //System.out.println(embIds.get(0).nodes.keySet());
-        //System.out.println(embIds.get(0).edges.keySet());
-        for(EmbeddingId emb: embIds){
-            //get value pairs from here
-            String var1id = "";
-            String var2id= "";
-            String value1= "";
-            String value2= "";
-            if(emb.nodes.containsKey(var1)){
-                var1id = emb.nodes.get(var1);
-                value1 = this.pg.getNode(var1id, pair.label1).get(pair.attributeName1);
-            }else{
-                var1id = emb.edges.get(var1);
-                value1 = this.pg.getEdge(var1id, pair.label1).get(pair.attributeName1);
-            }
-            if(emb.nodes.containsKey(var2)){
-                var2id = emb.nodes.get(var2);
-                value2 = this.pg.getNode(var2id, pair.label2).get(pair.attributeName2);
-            }else{
-                var2id = emb.edges.get(var2);
-                value2 = this.pg.getEdge(var2id, pair.label2).get(pair.attributeName2);
-            }
-            if(value1 == null) value1 = "";
-            if(value2 == null) value2 = "";
-            answer.add(new Tuple4<>(value1, var1id, value2, var2id));
+        for(EmbeddingId emb: embIds) {
+                //get value pairs from here
+                String var1id = "";
+                String var2id = "";
+                if (emb.nodes.containsKey(var1)) {
+                    var1id = emb.nodes.get(var1);
+                } else {
+                    var1id = emb.edges.get(var1);
+                }
+                if (emb.nodes.containsKey(var2)) {
+                    var2id = emb.nodes.get(var2);
+                } else {
+                    var2id = emb.edges.get(var2);
+                }
+                if(!var1id.equals(var2id)){
+                    answer.add(new Tuple4<>(var1id, var1id, var2id, var2id));
+                }
         }
         return answer;
     }
 
 
 
-    public List<Tuple4<String>> getValuePairNoSingleEdge(String var1, String var2, AttributePair pair){
-        //if an edge is envolved then the number of embeddings is the number of previous embeddings to this edge source
-        List<Tuple4<String>> answer = new ArrayList<>();
-        if(this.edges.containsKey(var1) || this.edges.containsKey(var2)) {
-            String edgeVar = var1;
-            String nodeVar = var2;
-            if(this.edges.containsKey(var2)){
-                nodeVar = var1;
-                edgeVar = var2;
-            }
-            Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
-            EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
-            for(String edgeId : edges.keySet()){
-                Tuple<String,String> srcTrg = edges.get(edgeId);
-                //get edgeId attribute
-                String value1 = null;
-                String id1 = null;
-                String id2 = null;
-                String value2 = null;
-                if(edgeVar.toString().equals(var1)){
-                    id1 = edgeId;
-                    value1 = this.pg.getEdgesProperties_Id().get(pair.label1).get(edgeId).get(pair.attributeName1);
-                }else{
-                    id2 = edgeId;
-                    value2 = this.pg.getEdgesProperties_Id().get(pair.label2).get(edgeId).get(pair.attributeName2);
-                }
-                String nodeId;
-                if(edgeP.targetVariable.toString().equals(nodeVar)){
-                    nodeId = srcTrg.y;
-                }else if(edgeP.sourceVariable.toString().equals(nodeVar)){
-                    nodeId = srcTrg.x;
-                }else{
-                    System.out.println("this variable does not exist!");
-                    return null;
-                }
-                if(nodeVar.toString().equals(var1)){
-                    id1 = nodeId;
-                    value1 = this.pg.getVerticesProperties_Id().get(pair.label1).get(nodeId).get(pair.attributeName1);
-                }else{
-                    id2 = nodeId;
-                    value2 = this.pg.getVerticesProperties_Id().get(pair.label2).get(nodeId).get(pair.attributeName2);
-                }
-                if(value1 == null) value1 = "";
-                if(id1 == null) id1 = "";
-                if(id2 == null) id2 = "";
-                if(value2 == null) value2 = "";
-                Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(edgeVar, edgeId, false);
-                List<Tuple4<String>> newAns = Collections.nCopies(numberOfEmbeddings, new Tuple4<>(value1, id1, value2,id2));
-                answer.addAll(newAns);
-                //answer.add(new Tuple4<>(value1,id1,value2,id2));
-            }
+    public List<Tuple4<String>> getNeqPairs(String var1, String var2, String label){
+        if(this.query.isDirectedlyConnected(var1, var2)){
+            return getAllValuePairNoSingleEdge_NeqPairs(var1, var2, label);
         }else{
-            //if there is not an edge involved then both variables are nodes
-            Set<EdgesPattern<NodeType, EdgeType>> edgesVar = this.query.getEdgesOfNodes(var1, var2);
-                for (EdgesPattern<NodeType, EdgeType> edge : edgesVar) {
-                    String edgeVar = (String) edge.variable;
-                    Map<String, Tuple<String, String>> edges = this.edges.get(edgeVar).edgeSrcTrg;
-                    EdgesPattern<NodeType, EdgeType> edgeP = this.edges.get(edgeVar).edge;
-                    for (String edgeId : edges.keySet()) {
-                        Tuple<String, String> srcTrg = edges.get(edgeId);
-                        String value1 = null;
-                        String id1 = null;
-                        String id2 = null;
-                        String value2 = null;
-                        if (var1.equals(edgeP.sourceVariable.toString())) {
-                            id1 = srcTrg.x;
-                            value1 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel.toString()).get(id1).get(pair.attributeName1);
-                        } else if (var1.equals(edgeP.targetVariable.toString())) {
-                            id1 = srcTrg.y;
-                            value1 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel.toString()).get(id1).get(pair.attributeName1);
-                        }
-                        if (var2.equals(edgeP.sourceVariable.toString())) {
-                            id2 = srcTrg.x;
-                            value2 = this.pg.getVerticesProperties_Id().get(edgeP.sourceLabel.toString()).get(id2).get(pair.attributeName2);
+            System.out.println("not directly connected");
+            return getAllValuePairNotConnected_NeqPairs(var1, var2, label);
+        }
+   }
 
-                        } else if (var2.equals(edgeP.targetVariable.toString())) {
-                            id2 = srcTrg.y;
-                            value2 = this.pg.getVerticesProperties_Id().get(edgeP.targetLabel.toString()).get(id2).get(pair.attributeName2);
+    public HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> getValuePair_AllAttrPair(String var1, String var2, List<AttributePair> pairs, boolean isSingleEdge){
+        if(isSingleEdge){
+            return getAllValuePairsSingleEdge(var1, var2, pairs);
+        }else if(this.query.isDirectedlyConnected(var1, var2)) { //part of the same edge
+            return getAllValuePairNoSingleEdge(var1, var2, pairs);
+        }else return new HashMap<>();
+    }
+
+    public HashMap<String, List<Tuple<String, String>>> getValuePair_AllAttr(String var, Set<String> listOfAttributes, boolean isSingleEdge){
+        HashMap<String, List<Tuple<String, String>>> answer = new HashMap<>();
+        String label = query.getLabelOfThisVariable(var);
+        if(isSingleEdge){
+            if(this.nodes.containsKey(var)){
+                Set<String> ids = this.nodes.get(var).vertices.keySet(); //set of all vertices ids in this answer graph
+                for(String id: ids) {
+                    for (String attr : listOfAttributes) {
+                        HashMap<String, String> m = pg.getVerticesProperties_Id().get(label).get(id);
+                        if(answer.containsKey(attr)){
+                            answer.get(attr).add(new Tuple<>(id, m.get(attr)));
+                        }else {
+                            List<Tuple<String, String>> t = new ArrayList<>();
+                            t.add(new Tuple<>(id, m.get(attr)));
+                            answer.put(attr, t);
                         }
-                        if(value1 == null) value1 = "";
-                        if(id1 == null) id1 = "";
-                        if(id2 == null) id2 = "";
-                        if(value2 == null) value2 = "";
-                        Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(edgeVar, edgeId, false);
-                        List<Tuple4<String>> newAns = Collections.nCopies(numberOfEmbeddings, new Tuple4<>(value1, id1, value2, id2));
-                        answer.addAll(newAns);
-                        answer.add(new Tuple4<>(value1, id1, value2, id2));
+                    }
+                }
+            }else{
+                Set<String> ids = this.edges.get(var).edgeSrcTrg.keySet(); //set of all vertices ids in this answer graph
+                for(String id: ids){
+                    for(String attr : listOfAttributes){
+                        HashMap<String, String> m = pg.getEdgesProperties_Id().get(label).get(id);
+                        if(answer.containsKey(attr)){
+                            answer.get(attr).add(new Tuple<>(id, m.get(attr)));
+                        }else {
+                            List<Tuple<String, String>> t = new ArrayList<>();
+                            t.add(new Tuple<>(id, m.get(attr)));
+                            answer.put(attr, t);
+                        }
                     }
                 }
             }
-       // }
-        return answer;
-    }
-
-
-
-
-    public List<Tuple4<String>> getValuePair_2(String var1, String var2, AttributePair pair, boolean isSingleEdge){
-        List<Tuple4<String>> answer = new ArrayList<>();
-        List<HashMap<String, String>> varTable = new LinkedList<>();
-        if(isSingleEdge){
-            return getValuePairSingleEdge(var1, var2, pair);
-        }else if(this.query.isDirectedlyConnected(var1, var2)){ //part of the same edge
-            return getValuePairNoSingleEdge(var1, var2, pair);
-        }else{
-            return getValuePairNotConnected(var1, var2, pair); //not a single edge and not part of the same edge
+        }else {
+            if(this.nodes.containsKey(var)){
+                Set<String> ids = this.nodes.get(var).vertices.keySet();
+                for(String id: ids) {
+                    Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(var, id, true);
+                    HashMap<String, String> m;
+                    try {
+                        m = pg.getVerticesProperties_Id().get(label).get(id);
+                        for(String attr: listOfAttributes){
+                            System.out.println(attr);
+                            List<Tuple<String, String>> newAns = new ArrayList<>(Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr))));
+                            if(answer.containsKey(attr)){
+                                answer.get(attr).addAll(newAns);
+                            }else {
+                                List<Tuple<String, String>> t = new ArrayList<>();
+                                t.addAll(newAns);
+                                answer.put(attr, t);
+                            }
+                        }
+                    }catch (Exception e){
+                        continue;
+                    }
+                }
+            }else{
+                Set<String> ids = this.edges.get(var).edgeSrcTrg.keySet(); //set of all vertices ids in this answer graph
+                for(String id: ids){
+                    Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(var, id, false);
+                    HashMap<String, String> m;
+                    try {
+                       m = pg.getEdgesProperties_Id().get(label).get(id);
+                        for(String attr: listOfAttributes) {
+                            List<Tuple<String, String>> newAns = new ArrayList<>(Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr))));
+                            if(answer.containsKey(attr)){
+                                answer.get(attr).addAll(newAns);
+                            }else {
+                                List<Tuple<String, String>> t = new ArrayList<>();
+                                t.addAll(newAns);
+                                answer.put(attr, t);
+                            }
+                        }
+                    }catch(Exception e){
+                        continue;
+                    }
+                }
+            }
         }
+        return answer;
     }
 
 
 
     public List<Tuple<String, String>> getValuePairAttribute(String var, String attr, boolean isSingleEdge){
-        List<Tuple<String,String>> answer = new ArrayList<>();
+        List<Tuple<String, String>> answer = new ArrayList<>();
         String label = query.getLabelOfThisVariable(var);
         if(isSingleEdge){
             if(this.nodes.containsKey(var)){
@@ -902,7 +1200,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                 for(String id: ids) {
                     Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(var, id, true);
                     HashMap<String, String> m = pg.getVerticesProperties_Id().get(label).get(id);
-                    List<Tuple<String, String>> newAns = Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr)));
+                    List<Tuple<String, String>> newAns = new ArrayList<>(Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr))));
                     answer.addAll(newAns);
                 }
             }else{
@@ -910,7 +1208,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                 for(String id: ids){
                     Integer numberOfEmbeddings = getNumberOfEmbeddingsEstimation(var, id, false);
                     HashMap<String, String> m = pg.getEdgesProperties_Id().get(label).get(id);
-                    List<Tuple<String, String>> newAns = Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr)));
+                    List<Tuple<String, String>> newAns = new ArrayList<>(Collections.nCopies(numberOfEmbeddings, new Tuple<>(id, m.get(attr))));
                     answer.addAll(newAns);
                 }
             }
@@ -955,7 +1253,7 @@ public class AnswerGraph<NodeType, EdgeType> {
     public Integer getNumberOfEmbeddingsEstimation(String variable, String id, boolean isNode){
         if(isNode){
             AGVertex<NodeType, EdgeType> vertex = this.nodes.get(variable);
-            if(!vertex.vertices.containsKey(id)) return 0;
+            if (!vertex.vertices.containsKey(id)) return 0;
             VertexEntry<NodeType, EdgeType> node = vertex.vertices.get(id);
             return node.getSizeEstimation();
         }else{
@@ -986,62 +1284,12 @@ public class AnswerGraph<NodeType, EdgeType> {
         return sum;
     }
 
-    public AnswerGraph<NodeType, EdgeType> filter_AG(AnswerGraph<NodeType, EdgeType> ag_source, List<Tuple<String, String>> commonVars){
-        Set<String> nodeVars = new HashSet<>();
-        Set<String> edgeVars = new HashSet<>();
-        Map<String, String> commonTargetSource = new HashMap<>();
-        for(Tuple<String, String> y : commonVars){
-            commonTargetSource.put(y.y, y.x);
-        }
-        AnswerGraph<NodeType, EdgeType> answerAG = new AnswerGraph<>(this.query);
-        for(String variableThis: commonTargetSource.keySet()){
-            String varSource = commonTargetSource.get(variableThis);
-            if(this.nodes.containsKey(variableThis)){
-                AGVertex<NodeType, EdgeType> t = this.nodes.get(variableThis);
-                AGVertex<NodeType, EdgeType> s = ag_source.nodes.get(varSource);
-                EWAHCompressedBitmap commonNodesOfThisVariable = t.nodesIds.and(s.nodesIds);
-                if(commonNodesOfThisVariable.cardinality() == 0){
-                    return new AnswerGraph<>(this.query);
-                }
-                answerAG.addNodesOfVariablesInteger(variableThis, commonNodesOfThisVariable.toList());
-                nodeVars.add(variableThis);
-            }else if(this.edges.containsKey(variableThis)){
-                AGEdge<NodeType, EdgeType> t = this.edges.get(variableThis);
-                AGEdge<NodeType, EdgeType> s = ag_source.edges.get(varSource);
-                EWAHCompressedBitmap commonEdgesOfThisVariable = t.edgesIds.and(s.edgesIds);
-                if(commonEdgesOfThisVariable.cardinality() == 0){
-                    return new AnswerGraph<>(this.query);
-                }
-                answerAG.addEdgesOfVariablesInteger(variableThis, commonEdgesOfThisVariable.toList());
-                edgeVars.add(variableThis);
-            }else{
-                System.out.println("No variable " +  variableThis + " in target");
-            }
-        }
-        Set<String> verticesVariables = this.query.getVerticesVariables();
-        Set<String> edgesVariables = this.query.getEdgesVariables();
-        verticesVariables.removeAll(nodeVars);
-        edgesVariables.removeAll(edgeVars);
-        //add all other variables
-        for(String vertexVar: verticesVariables){
-            AGVertex<NodeType, EdgeType> t = this.nodes.get(vertexVar);
-            answerAG.nodes.put(vertexVar, t);
-        }
-        for(String edgesVar : edgesVariables){
-            AGEdge<NodeType, EdgeType> t = this.edges.get(edgesVar);
-            answerAG.edges.put(edgesVar, t);
-        }
-        answerAG.nodeBurnBack(commonTargetSource.keySet());
-        return answerAG;
-    }
-
     public AnswerGraph<NodeType, EdgeType> filter_AGV2(AnswerGraph<NodeType, EdgeType> ag_source, List<Tuple<String, String>> commonVars) throws CloneNotSupportedException {
         Set<String> nodeVars = new HashSet<>();
         Set<String> edgeVars = new HashSet<>();
         Map<String, String> commonTargetSource = new HashMap<>();
         AnswerGraph<NodeType, EdgeType> answerAG = new AnswerGraph<>(this.query, this.nodes, this.edges);
         for(Tuple<String, String> y : commonVars){
-            // commonSourceTarget.put(y.x, y.y);
             commonTargetSource.put(y.y, y.x);
         }
         for(String variableThis: commonTargetSource.keySet()){
@@ -1078,44 +1326,48 @@ public class AnswerGraph<NodeType, EdgeType> {
     }
 
     public AnswerGraph<NodeType, EdgeType> filter_AGV3(AnswerGraph<NodeType, EdgeType> ag_target, List<Tuple<String, String>> commonVars) throws CloneNotSupportedException {
-        Set<String> nodeVars = new HashSet<>();
-        Set<String> edgeVars = new HashSet<>();
-        Map<String, String> commonTargetSource = new HashMap<>();
-        AnswerGraph<NodeType, EdgeType> answerAG = new AnswerGraph<>(this.query, this.nodes, this.edges);
-        for(Tuple<String, String> y : commonVars){
-            commonTargetSource.put(y.x, y.y);
-        }
-        for(String variableThis: commonTargetSource.keySet()){
-            String varTarget = commonTargetSource.get(variableThis);
-            if(this.nodes.containsKey(variableThis)){
-                AGVertex<NodeType, EdgeType> t = this.nodes.get(variableThis);
-                AGVertex<NodeType, EdgeType> s = ag_target.nodes.get(varTarget);
-                EWAHCompressedBitmap commonNodesOfThisVariable = t.nodesIds.and(s.nodesIds);
-                if(commonNodesOfThisVariable.cardinality() == 0){
-                    return new AnswerGraph<>(this.query);
-                }
-                Set<String> ids = new HashSet<>();
-                for(Integer intId : commonNodesOfThisVariable.toList()){
-                    ids.add(String.valueOf(intId));
-                }
-                answerAG.filter(ids, variableThis);
-            }else if(this.edges.containsKey(variableThis)){
-                AGEdge<NodeType, EdgeType> t = this.edges.get(variableThis);
-                AGEdge<NodeType, EdgeType> s = ag_target.edges.get(varTarget);
-                EWAHCompressedBitmap commonEdgesOfThisVariable = t.edgesIds.and(s.edgesIds);
-                if(commonEdgesOfThisVariable.cardinality() == 0){
-                    return new AnswerGraph<>(this.query);
-                }
-                Set<String> ids = new HashSet<>();
-                for(Integer intId: commonEdgesOfThisVariable.toList()){
-                    ids.add(String.valueOf(intId));
-                }
-                answerAG.filter(ids, variableThis);
-            }else{
-                System.out.println("No variable " +  variableThis + " in target");
+        try {
+            Set<String> nodeVars = new HashSet<>();
+            Set<String> edgeVars = new HashSet<>();
+            AnswerGraph<NodeType, EdgeType> answerAG = new AnswerGraph<>(this.query, this.nodes, this.edges);
+            Map<String, String> commonTargetSource = new HashMap<>();
+            for (Tuple<String, String> y : commonVars) {
+                commonTargetSource.put(y.x, y.y);
             }
-        }
+            for (String variableThis : commonTargetSource.keySet()) {
+                String varTarget = commonTargetSource.get(variableThis);
+                if (this.nodes.containsKey(variableThis)) {
+                    AGVertex<NodeType, EdgeType> t = this.nodes.get(variableThis);
+                    AGVertex<NodeType, EdgeType> s = ag_target.nodes.get(varTarget);
+                    EWAHCompressedBitmap commonNodesOfThisVariable = t.nodesIds.and(s.nodesIds);
+                    if (commonNodesOfThisVariable.cardinality() == 0) {
+                        return new AnswerGraph<>(this.query);
+                    }
+                    Set<String> ids = new HashSet<>();
+                    for (Integer intId : commonNodesOfThisVariable.toList()) {
+                        ids.add(String.valueOf(intId));
+                    }
+                    answerAG = answerAG.filter(ids, variableThis);
+                } else if (this.edges.containsKey(variableThis)) {
+                    AGEdge<NodeType, EdgeType> t = this.edges.get(variableThis);
+                    AGEdge<NodeType, EdgeType> s = ag_target.edges.get(varTarget);
+                    EWAHCompressedBitmap commonEdgesOfThisVariable = t.edgesIds.and(s.edgesIds);
+                    if (commonEdgesOfThisVariable.cardinality() == 0) {
+                        return new AnswerGraph<>(this.query);
+                    }
+                    Set<String> ids = new HashSet<>();
+                    for (Integer intId : commonEdgesOfThisVariable.toList()) {
+                        ids.add(String.valueOf(intId));
+                    }
+                    answerAG = answerAG.filter(ids, variableThis);
+                } else {
+                    System.out.println("No variable " + variableThis + " in target");
+                }
+            }
         return answerAG;
+        }catch(Exception e){
+            return new AnswerGraph<>(this.query);
+        }
     }
 
 
@@ -1136,7 +1388,6 @@ public class AnswerGraph<NodeType, EdgeType> {
                 nodeBurnBack(idsToCheck, variable);
             }
         }
-       // System.out.println("General node burn back!");
     }
 
     public void removeNodeBurnBack(String var, String id){
@@ -1156,6 +1407,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                 //reached node is not from this edge --> ERROR!!
                 Tuple<String, String> srcTrgt = (Tuple<String, String>) this.edges.get(outgoing.variable.toString()).edgeSrcTrg.remove(connEdge);
                 if(srcTrgt == null){
+                  //  System.out.println("Not this edge!");
                     continue;
                 }
                 this.edges.get(outgoing.variable.toString()).edgesIds.clear(Integer.valueOf(connEdge));
@@ -1165,7 +1417,7 @@ public class AnswerGraph<NodeType, EdgeType> {
                 }
                 if(!reachedNodeEntry.getAdjacenteEdgesIngoing().isEmpty()) {
                     if (reachedNodeEntry.getAdjacenteEdgesIngoing().size() == 1) {
-                        Tuple<String, String> first = reachedNodeEntry.getAdjacenteEdgesIngoing().firstElement();
+                        Tuple<String, String> first = reachedNodeEntry.getAdjacenteEdgesIngoing().iterator().next();//.firstElement();
                         if (first.x == connEdge && first.y == id) {
                             removeNodeBurnBack(outgoing.targetVariable.toString(), reachedNode);//else also remove reached node
                         }
@@ -1185,14 +1437,12 @@ public class AnswerGraph<NodeType, EdgeType> {
                 if(srcTrgt == null){
                   //  System.out.println("Not this edge!");
                     continue;
-                }//else{
-                 //   System.out.println("Deleted edge!!!" + connEdge);
-                //}
+                }
                 this.edges.get(ingoing.variable.toString()).edgesIds.clear(Integer.valueOf(connEdge));
                 VertexEntry<NodeType, EdgeType> fromNodeEntry = (VertexEntry<NodeType, EdgeType>) this.nodes.get(ingoing.sourceVariable.toString()).vertices.get(fromNode);
                 if(!fromNodeEntry.getAdjacentEdgesOutgoing().isEmpty()) {
                     if (fromNodeEntry.getAdjacentEdgesOutgoing().size() == 1) {
-                        Tuple<String, String> first = fromNodeEntry.getAdjacentEdgesOutgoing().firstElement();
+                        Tuple<String, String> first = fromNodeEntry.getAdjacentEdgesOutgoing().iterator().next();//.firstElement();
                         if (first.x == connEdge && first.y == id) {
                             removeNodeBurnBack(ingoing.sourceVariable.toString(), fromNode);
                         }
@@ -1215,12 +1465,12 @@ public class AnswerGraph<NodeType, EdgeType> {
             return false;
         }
         for(String var: this.nodes.keySet()){
-            if(!this.nodes.get(var).nodesIds.equals(ag.nodes.get(var).nodesIds)){
+            if(this.nodes.get(var).nodesIds.andCardinality(ag.nodes.get(var).nodesIds) != this.nodes.get(var).nodesIds.cardinality() && this.nodes.get(var).nodesIds.cardinality() != ag.nodes.get(var).nodesIds.cardinality()){
                 return false;
             }
         }
         for(String var: this.edges.keySet()){
-            if(!this.edges.get(var).edgesIds.equals(ag.edges.get(var).edgesIds)){
+            if(this.edges.get(var).edgesIds.andCardinality(ag.edges.get(var).edgesIds) != this.edges.get(var).edgesIds.cardinality() && this.edges.get(var).edgesIds.cardinality() != ag.edges.get(var).edgesIds.cardinality()){
                 return false;
             }
         }
@@ -1274,7 +1524,7 @@ public class AnswerGraph<NodeType, EdgeType> {
             }
         }
         Set<EdgesPattern<NodeType, EdgeType>> edgesFromHub = gp.getEdgesIngoing(hub);
-        GraphPattern<NodeType, EdgeType> gp_new = new GraphPattern<>(this.query);
+        GraphPattern<NodeType, EdgeType> gp_new = new GraphPattern<NodeType, EdgeType>(this.query);
         gp_new.getEdges().removeAll(edgesFromHub);
         gp_new.getEdges().add(edgesFromHub.iterator().next());
         return isChain(gp_new);
@@ -1374,6 +1624,67 @@ public class AnswerGraph<NodeType, EdgeType> {
     }
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public Integer getCombinationWithRepetition(HashMap<String, Set<String>> map){
+        if(map.size() == 0){
+            return 0;
+        }
+        int combinationSize = 1;
+        Set<String> keysLabel = new HashSet<>();
+        HashMap<String, Set<String>> labelSet = new HashMap<>();
+        for(String var: map.keySet()){
+            String label = this.query.getNodeFromVariable(var).nodeLabel.toString();
+            keysLabel.add(label);
+            if(labelSet.containsKey(label)){
+                labelSet.get(label).add(var);
+            }else {
+                HashSet<String> s = new HashSet<>();
+                s.add(var);
+                labelSet.put(label, s);
+            }
+        }
+        if(keysLabel.size() == 1){
+            Boolean b = false;
+            String firstVar = map.keySet().iterator().next();
+            Set<String> initialSet = map.get(firstVar);
+            if(initialSet.size() < map.keySet().size()){
+                return 0;
+            }
+            try{
+                int ret = Math.toIntExact(factorial(initialSet.size())/factorial((initialSet.size() - map.keySet().size())));
+                return ret;
+            } catch (ArithmeticException e){
+                System.out.println("Set size:" + initialSet.size());
+                System.out.println("Map set keys:" + map.keySet().size());
+                this.query.prettyPrint();
+                return 0;
+            }
+        }else if(keysLabel.size() > 1 && keysLabel.size() < map.keySet().size()){
+            //find which keyslabel are the same
+            for(String label : labelSet.keySet()){
+                if(labelSet.get(label).size() == 1){
+                    combinationSize = (combinationSize * labelSet.get(label).size());
+                }else{
+                    String var = labelSet.get(label).iterator().next();
+                    int setSize = map.get(var).size();
+                    Integer size = 1;
+                    if(setSize < labelSet.get(label).size()){
+                        size = 1;
+                    }else {
+                        size = Math.toIntExact(factorial(setSize)/factorial((setSize - labelSet.get(label).size())));
+                    }
+                    combinationSize = combinationSize * size;
+                }
+            }
+        } else if(keysLabel.size() == map.keySet().size()){
+            for(String var : map.keySet()){
+                combinationSize = (combinationSize * map.get(var).size());
+            }
+            return combinationSize;
+        }
+        return combinationSize;
+    }
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Integer getCombination(HashMap<String, Set<String>> map){
         if(map.size() == 0){
             return 0;
@@ -1394,48 +1705,58 @@ public class AnswerGraph<NodeType, EdgeType> {
         }
         AGVertex<NodeType,EdgeType> agvertex = this.nodes.get(hubVariable.x);
         int sum=0;
-        for(String hubId : agvertex.vertices.keySet()){
-            if(hubVariable.y.equals(1)){
-                Vector<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacentEdgesOutgoing();
+        if(hubVariable.y.equals(1)){
+            for(String hubId : agvertex.vertices.keySet()) {
+                Set<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacentEdgesOutgoing();
                 HashMap<String, Set<String>> map = new HashMap<>();
                 for(Tuple<String, String> edgeTarget : v){
                     for(EdgesPattern<NodeType, EdgeType> edges: this.query.getEdges()) {
                         String edgeVariable = edges.variable.toString();
+                        String nodeVar = edges.targetVariable.toString();
                         if (this.edges.get(edgeVariable).edgeSrcTrg.containsKey(edgeTarget.x)) {
-                            if (map.containsKey(edgeVariable)) {
-                                map.get(edgeVariable).add(edgeTarget.y);
+                            if (map.containsKey(nodeVar)) {
+                            //if (map.containsKey(edgeVariable)) {
+                               // map.get(edgeVariable).add(edgeTarget.y);
+                                map.get(nodeVar).add(edgeTarget.y);
                             } else {
                                 Set<String> trgt = new HashSet<>();
                                 trgt.add(edgeTarget.y);
-                                map.put(edgeVariable, trgt);
-                            }
-                        }
-                    }
-                }
-                sum = sum + getCombination(map);
-            }else if(hubVariable.y.equals(-1)){
-                Vector<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacenteEdgesIngoing();
-                HashMap<String, Set<String>> map = new HashMap<>();
-                for(Tuple<String, String> edgeTarget : v){
-                    for(EdgesPattern<NodeType, EdgeType> edges: this.query.getEdges()) {
-                        String edgeVariable = edges.variable.toString();
-                        if (this.edges.get(edgeVariable).edgeSrcTrg.containsKey(edgeTarget.x)) {
-                            if (map.containsKey(edgeVariable)) {
-                                map.get(edgeVariable).add(edgeTarget.y);
-                            } else {
-                                Set<String> trgt = new HashSet<>();
-                                trgt.add(edgeTarget.y);
-                                map.put(edgeVariable, trgt);
+                               // map.put(edgeVariable, trgt);
+                                map.put(nodeVar, trgt);
                             }
                         }
                     }
                 }
                 sum = sum + getCombination(map);
             }
-
-        }
+            return sum;
+            }
+        else if(hubVariable.y.equals(-1)){
+            for(String hubId : agvertex.vertices.keySet()) {
+                Set<Tuple<String, String>> v = agvertex.vertices.get(hubId).getAdjacenteEdgesIngoing();
+                HashMap<String, Set<String>> map = new HashMap<>();
+                for(Tuple<String, String> edgeTarget : v){
+                    for(EdgesPattern<NodeType, EdgeType> edges: this.query.getEdges()) {
+                        String edgeVariable = edges.variable.toString();
+                        String nodeVar = edges.sourceVariable.toString();
+                        if (this.edges.get(edgeVariable).edgeSrcTrg.containsKey(edgeTarget.x)) {
+                            if (map.containsKey(nodeVar)) {
+                                map.get(nodeVar).add(edgeTarget.y);
+                            } else {
+                                Set<String> trgt = new HashSet<>();
+                                trgt.add(edgeTarget.y);
+                                map.put(nodeVar, trgt);
+                            }
+                        }
+                    }
+                }
+                sum = sum + getCombination(map);
+            }
+            return sum;
+            }
         return sum;
     }
+
 
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -1510,36 +1831,53 @@ public class AnswerGraph<NodeType, EdgeType> {
             }
         }
         AGVertex<NodeType, EdgeType> ag = this.nodes.get(hub);
-        for(String nodeId : ag.vertices.keySet()){
+        for(String nodeId : ag.vertices.keySet()) {
             VertexEntry<NodeType, EdgeType> vertex = ag.vertices.get(nodeId);
-            HashMap<String, Set<String>> allEdges = new HashMap<>();
-            for(Tuple<String, String> x :vertex.getAdjacenteEdgesIngoing()){
-                for(EdgesPattern<NodeType, EdgeType> edges : this.query.getEdgesIngoing(hub)){
-                    if(this.edges.get(edges.variable.toString()).hasEdge(x.x)){
-                        if(allEdges.containsKey(edges.variable.toString())){
-                            allEdges.get(edges.variable.toString()).add(x.x);
-                        }else{
+            HashMap<String, Set<String>> allEdgesIngoing = new HashMap<>();
+            HashMap<String, Set<String>> allEdgesOutgoing = new HashMap<>();
+            for (Tuple<String, String> x : vertex.getAdjacenteEdgesIngoing()) {
+                for (EdgesPattern<NodeType, EdgeType> edges : this.query.getEdgesIngoing(hub)) {
+                    String nodeVar = edges.sourceVariable.toString();
+                    if (this.edges.get(edges.variable.toString()).hasEdge(x.x)) {
+                        if (allEdgesIngoing.containsKey(nodeVar)) {
+                            allEdgesIngoing.get(nodeVar).add(x.x);
+                        } else {
                             Set<String> edges_id = new HashSet<>();
                             edges_id.add(x.x);
-                            allEdges.put(edges.variable.toString(), edges_id);
+                            allEdgesIngoing.put(nodeVar, edges_id);
                         }
                     }
                 }
             }
-            for(Tuple<String, String> x :vertex.getAdjacentEdgesOutgoing()){
-                for(EdgesPattern<NodeType, EdgeType> edges : this.query.getEdgesOutgoing(hub)){
-                    if(this.edges.get(edges.variable.toString()).hasEdge(x.x)){
-                        if(allEdges.containsKey(edges.variable.toString())){
-                            allEdges.get(edges.variable.toString()).add(x.x);
-                        }else{
+            for (Tuple<String, String> x : vertex.getAdjacentEdgesOutgoing()) {
+                for (EdgesPattern<NodeType, EdgeType> edges : this.query.getEdgesOutgoing(hub)) {
+                    String nodeVar = edges.targetVariable.toString();
+                    if (this.edges.get(edges.variable.toString()).hasEdge(x.x)) {
+                        if (allEdgesOutgoing.containsKey(nodeVar)) {
+                            allEdgesOutgoing.get(nodeVar).add(x.x);
+                        } else {
                             Set<String> edges_id = new HashSet<>();
                             edges_id.add(x.x);
-                            allEdges.put(edges.variable.toString(), edges_id);
+                            allEdgesOutgoing.put(nodeVar, edges_id);
                         }
                     }
                 }
             }
-            estimation = estimation + getCombination(allEdges);
+            if (allEdgesIngoing.keySet().size() > allEdgesOutgoing.keySet().size()){
+                if (allEdgesOutgoing.keySet().size() == 1) {
+                    estimation = estimation + getCombination(allEdgesIngoing);//getCombinationWithRepetition(allEdgesIngoing);
+                }
+                if(allEdgesOutgoing.keySet().size() > 1){
+                    estimation = estimation + (getCombination(allEdgesIngoing) * getCombination(allEdgesOutgoing));//(getCombinationWithRepetition(allEdgesIngoing) * getCombinationWithRepetition(allEdgesOutgoing));
+                }
+        }else if(allEdgesOutgoing.keySet().size() > allEdgesIngoing.keySet().size()) {
+                if (allEdgesIngoing.keySet().size() == 1) {
+                    estimation = estimation + getCombination(allEdgesOutgoing);//getCombinationWithRepetition(allEdgesOutgoing);
+                }
+                if (allEdgesIngoing.keySet().size() > 1){
+                    estimation = estimation + (getCombination(allEdgesOutgoing) * getCombination(allEdgesIngoing));//(getCombinationWithRepetition(allEdgesOutgoing) * getCombinationWithRepetition(allEdgesIngoing));
+                }
+            }
         }
         return estimation;
     }
@@ -1560,17 +1898,21 @@ public class AnswerGraph<NodeType, EdgeType> {
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public Integer getNumberOfEmbeddings() {
-        if(isSingleNode(this.query)){
-           return this.nodes.values().iterator().next().vertices.keySet().size();
-        }else if(isSingleEdge(this.query)){
-          return this.edges.values().iterator().next().edgeSrcTrg.keySet().size();
-        } else if (isChain(this.query)) {
-            return getNumberOfEmbeddingsChain();
-        } else if (isSnowflake(this.query)) {
-            return getNumberOfEmbeddingsSnowflake();
-        }
-        else if (isBowTie(this.query)){
-            return getNumberOfEmbeddingsBowTie();
+        try{
+            if(isSingleNode(this.query)){
+                return this.nodes.values().iterator().next().vertices.keySet().size();
+            }else if(isSingleEdge(this.query)){
+                return this.edges.values().iterator().next().edgeSrcTrg.keySet().size();
+            } else if (isChain(this.query)) {
+                return getNumberOfEmbeddingsChain();
+            } else if (isSnowflake(this.query)) {
+                return getNumberOfEmbeddingsSnowflake();
+            }
+            else if (isBowTie(this.query)){
+                return getNumberOfEmbeddingsBowTie();
+            }
+        } catch(Exception e){
+            return 0;
         }
         System.out.println("Cannot get number of embeddings for this shape");
         return 0;

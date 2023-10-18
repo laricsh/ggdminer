@@ -17,13 +17,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.Dijkstra;
+package grami_directed_subgraphs.Dijkstra;
 
-import main.java.grami_directed_subgraphs.dataStructures.DFScodeSerializer;
-import main.java.grami_directed_subgraphs.search.Searcher;
-import main.java.grami_directed_subgraphs.utilities.CommandLineParser;
-import main.java.grami_directed_subgraphs.utilities.Settings;
-import main.java.grami_directed_subgraphs.utilities.StopWatch;
+import grami_directed_subgraphs.dataStructures.DFScodeSerializer;
+import grami_directed_subgraphs.search.Searcher;
+import grami_directed_subgraphs.utilities.CommandLineParser;
+import grami_directed_subgraphs.utilities.Settings;
+import grami_directed_subgraphs.utilities.StopWatch;
 
 import java.io.FileWriter;
 
@@ -34,7 +34,7 @@ public class main {
 	static int FSM=0;
 	
 	
-	public static void main(String[] args) 
+	public static void main(String[] args)
 	{
 		int maxNumOfDistinctNodes=1;
 		
@@ -48,7 +48,7 @@ public class main {
 			freq = Settings.frequency;
 		
 		Searcher<String, String> sr=null;
-		StopWatch watch = new StopWatch();	
+		StopWatch watch = new StopWatch();
 		watch.start();
 				
 		try
@@ -85,7 +85,7 @@ public class main {
 				//write the frequent subgraphs
 				for (int i = 0; i < sr.result.size(); i++) 
 				{		
-					String out=DFScodeSerializer.serialize(sr.result.get(i));
+					String out= DFScodeSerializer.serialize(sr.result.get(i));
 				
 					fw.write(i+":\n");
 					fw.write(out);

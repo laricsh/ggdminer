@@ -1,4 +1,4 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
 
 import java.util.Objects;

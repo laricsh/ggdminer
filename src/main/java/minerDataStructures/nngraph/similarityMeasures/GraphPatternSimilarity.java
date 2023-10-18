@@ -1,8 +1,8 @@
-package main.java.minerDataStructures.similarityMeasures;
+package minerDataStructures.nngraph.similarityMeasures;
 
-import main.java.DifferentialConstraint.DistanceFunctions;
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.nngraph.SimilarityInterface;
+import DifferentialConstraint.DistanceFunctions;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.nngraph.SimilarityInterface;
 
 import java.util.List;
 

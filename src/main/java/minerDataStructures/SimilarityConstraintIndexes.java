@@ -1,6 +1,6 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.ggdSearch.GGDSearcher;
+import ggdSearch.GGDSearcher;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,7 +56,7 @@ public class SimilarityConstraintIndexes {
                 if (type.label.equals(this.pg.getLabelCodes().get(Integer.valueOf(label)))){
                     for(String attr : values){
                         if(type.data.containsKey(attr) && type.data.get(attr).equalsIgnoreCase("string")){
-                            if(!attr.equals("description") && !attr.equals("idAmazon")) stringValuesOfThisLabel.add(attr);
+                            stringValuesOfThisLabel.add(attr);
                         }
                         if(type.data.containsKey(attr) && type.data.get(attr).equalsIgnoreCase("number")){
                             numberValuesOfThisLabel.add(attr);
@@ -88,8 +88,10 @@ public class SimilarityConstraintIndexes {
     }
 
     public Integer buildIndex(Integer indexId, HashMap<String, Set<String>> values, DecisionBoundaries boundaries){
-        for(String label: stringValues.keySet()){
-            for(String attr: stringValues.get(label)) {
+        for(String label: values.keySet()){
+            //for(String label: stringValues.keySet()){
+            for(String attr: values.get(label)){
+                //for(String attr: stringValues.get(label)) {
                 SimilarityIntervalIndex simIndex = new SimilarityIntervalIndex(stringBoundaries, label, attr);
                 simIndex.buildIndex();
                 Tuple<String, String> key = new Tuple<>(label, attr);

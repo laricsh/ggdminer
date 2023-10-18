@@ -17,9 +17,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.utilities;
+package grami_directed_subgraphs.utilities;
 
-import main.java.grami_directed_subgraphs.CSP.VariableCandidates;
+import grami_directed_subgraphs.CSP.VariableCandidates;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -60,7 +60,7 @@ public class Util
 		return inter;
 	}
 	
-	public static ArrayList<Integer> getIntersection(ArrayList<Integer> set1,ArrayList<Integer> set2)
+	public static ArrayList<Integer> getIntersection(ArrayList<Integer> set1, ArrayList<Integer> set2)
 	{
 		ArrayList<Integer> inter= new ArrayList<Integer>();
 		ArrayList<Integer> firstSet= set1;
@@ -101,11 +101,11 @@ public class Util
 		return points;
 	}
 	
-	public static  HashMap<Integer, HashSet<Integer>> clone(HashMap<Integer, HashSet<Integer>> in)
+	public static HashMap<Integer, HashSet<Integer>> clone(HashMap<Integer, HashSet<Integer>> in)
 	{
 		HashMap<Integer, HashSet<Integer>> out = new HashMap<Integer, HashSet<Integer>>();
 
-		for (Iterator<Entry<Integer, HashSet<Integer>>> iterator = in.entrySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Entry<Integer, HashSet<Integer>>> iterator = in.entrySet().iterator(); iterator.hasNext();)
 		{
 			Entry<Integer, HashSet<Integer>> entry = iterator.next();
 			out.put(entry.getKey(), (HashSet<Integer>)entry.getValue().clone());

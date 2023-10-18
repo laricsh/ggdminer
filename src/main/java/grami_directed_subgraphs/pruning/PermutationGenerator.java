@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.pruning;
+package grami_directed_subgraphs.pruning;
 
 import java.math.BigInteger;
 
@@ -40,7 +40,7 @@ public class PermutationGenerator {
 
   public PermutationGenerator (int n) {
     if (n < 1) {
-      throw new IllegalArgumentException ("Min 1");
+      throw new IllegalArgumentException("Min 1");
     }
     a = new int[n];
     total = getFactorial (n);
@@ -55,7 +55,7 @@ public class PermutationGenerator {
     for (int i = 0; i < a.length; i++) {
       a[i] = i;
     }
-    numLeft = new BigInteger (total.toString ());
+    numLeft = new BigInteger(total.toString ());
   }
 
   //------------------------------------------------
@@ -89,7 +89,7 @@ public class PermutationGenerator {
   private static BigInteger getFactorial (int n) {
     BigInteger fact = BigInteger.ONE;
     for (int i = n; i > 1; i--) {
-      fact = fact.multiply (new BigInteger (Integer.toString (i)));
+      fact = fact.multiply (new BigInteger(Integer.toString (i)));
     }
     return fact;
   }

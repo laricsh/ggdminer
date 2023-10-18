@@ -12,11 +12,11 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.dataStructures.DFSCode;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanEdge;
-import main.java.grami_directed_subgraphs.dataStructures.IntFrequency;
+import grami_directed_subgraphs.dataStructures.DFSCode;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import grami_directed_subgraphs.dataStructures.IntFrequency;
 
 import java.io.Serializable;
 import java.util.Iterator;
@@ -36,7 +36,7 @@ import java.util.Map;
  *            .equals(..))
  */
 public class Algorithm<NodeType, EdgeType> implements
-		main.java.grami_directed_subgraphs.AlgorithmInterface.Algorithm<NodeType, EdgeType>,
+		grami_directed_subgraphs.AlgorithmInterface.Algorithm<NodeType, EdgeType>,
 		Generic<NodeType, EdgeType> {
 
 	/**
@@ -46,7 +46,7 @@ public class Algorithm<NodeType, EdgeType> implements
 	 * 
 	 */
 	private class MyIterator implements
-			Iterator<SearchLatticeNode<NodeType, EdgeType>> {
+            Iterator<SearchLatticeNode<NodeType, EdgeType>> {
 		final Iterator<Map.Entry<GSpanEdge<NodeType, EdgeType>, DFSCode<NodeType, EdgeType>>> entryit;
 
 		final boolean del;
@@ -116,7 +116,7 @@ public class Algorithm<NodeType, EdgeType> implements
 
 	private boolean keep;
 
-	private transient/* final */Map<GSpanEdge<NodeType, EdgeType>, DFSCode<NodeType, EdgeType>> initials;
+	private transient/* final */ Map<GSpanEdge<NodeType, EdgeType>, DFSCode<NodeType, EdgeType>> initials;
 
 	/**
 	 * generates a new (GSpan) algorithm

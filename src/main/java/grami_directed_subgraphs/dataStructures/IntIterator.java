@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 /**
  * This interface represents an iterator over a set of integers

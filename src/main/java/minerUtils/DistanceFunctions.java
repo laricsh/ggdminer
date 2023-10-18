@@ -1,4 +1,4 @@
-package main.java.minerUtils;
+package minerUtils;
 
 
 import edu.uniba.di.lacam.kdde.lexical_db.MITWordNet;

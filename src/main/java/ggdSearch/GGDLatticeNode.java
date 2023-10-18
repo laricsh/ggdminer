@@ -1,20 +1,20 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.Constraint;
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.GraphPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.dataStructures.DFSCode;
-import main.java.grami_directed_subgraphs.search.SearchLatticeNode;
-import main.java.minerDataStructures.DifferentialConstraint;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.answergraph.AGEdge;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
-import main.java.minerDataStructures.answergraph.VertexEntry;
-import main.java.minerDataStructures.PatternQuery;
-import main.java.minerDataStructures.*;
-import main.java.grami_directed_subgraphs.dataStructures.*;//Graph;
+import ggdBase.Constraint;
+import ggdBase.EdgesPattern;
+import ggdBase.GraphPattern;
+import ggdBase.VerticesPattern;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.dataStructures.DFSCode;
+import grami_directed_subgraphs.search.SearchLatticeNode;
+import minerDataStructures.*;
+import minerDataStructures.DifferentialConstraint;
+import minerDataStructures.PatternQuery;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.answergraph.AGEdge;
+import minerDataStructures.answergraph.AnswerGraph;
+import minerDataStructures.answergraph.VertexEntry;
 
 import java.util.*;
 
@@ -70,11 +70,11 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
             String labelCode = this.pg.searchLabelCode(vertex.nodeLabel.toString());
             return "v " + labelCode + " " + vertex.nodeVariable ;
         }
-       return super.toString();
+        return super.toString();
     }
 
-
     public Collection<GGDLatticeNode<NodeType, EdgeType>> HorizontalExtend_AG(GSpanEdge<NodeType, EdgeType> extension) throws CloneNotSupportedException {
+        //GGDExtension ggdExtension = new GGDExtension( (GSpanExtension) extension) ;
         GraphPattern pattern = new GraphPattern();
         pattern.setGraphPatternWithLabels(this.getHPlistGraph(), this.pg.getLabelCodes());
         PatternQuery query = new PatternQuery(pattern);
@@ -83,36 +83,6 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
         //pass what was extended as parameter
         List<GGDLatticeNode<NodeType, EdgeType>> constraints = discovery.discoverAllConstraint_AG(this, extension);
         return constraints;
-    }
-
-
-    public Collection<GGDLatticeNode<NodeType, EdgeType>> HorizontalExtend(DFSCode<NodeType, EdgeType> nodeToExtend, GSpanEdge<NodeType, EdgeType> extension){
-        List<GGDLatticeNode<NodeType, EdgeType>> returnNodes = new ArrayList<>();
-        GraphPattern pattern = new GraphPattern();
-        pattern.setGraphPattern(this.getHPlistGraph());
-        PatternQuery query = new PatternQuery(pattern);
-        if(query.gp.getEdges().size() == 1){
-            query.setEmbeddingsFromDFSCode(this.variables);
-        }else{
-            query.setEmbeddings(this.query.embeddings);
-        }
-        //query.setEmbeddingsFromDFSCode(embeddings);
-        //query.runQuery(); --> Use only when variables are not available
-        DifferentialConstraintDiscovery discovery = new DifferentialConstraintDiscovery(query);
-        //pass what was extended as parameter
-        List<DifferentialConstraint> constraints = discovery.discoverAllConstraint(extension);
-        if (constraints== null) return returnNodes;
-        for(DifferentialConstraint cons: constraints){
-            GGDLatticeNode<NodeType, EdgeType> latticeNode = new GGDLatticeNode<>(nodeToExtend);
-            latticeNode.constraints.constraints.addAll(cons.constraints);
-            //System.out.println("Embeddings in query" + query.embeddings.size());
-            List<Embedding> tmp = setEmbeddingsFromConstraint(cons, query.embeddings);
-            //System.out.println("Embeddings in tmp" + tmp.size());
-            latticeNode.query.embeddings = setEmbeddingsFromConstraint(cons, query.embeddings);
-            //System.out.println("Embeddings in constraint" + latticeNode.query.embeddings.size());
-            returnNodes.add(latticeNode);
-        }
-        return returnNodes;
     }
 
     public void setEmbeddingsIdsFromTuple(DifferentialConstraint cons){
@@ -140,81 +110,16 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
                     if(em.nodes.containsKey(var)) {
                         if(em.nodes.get(var).get("id").equals(la.get(var))) insert = true;
                     }else if(em.edges.containsKey(var)){
-                            if(em.edges.get(var).get("id").equals(la.get(var))){
-                                insert = true;
-                            }
+                        if(em.edges.get(var).get("id").equals(la.get(var))){
+                            insert = true;
                         }
-                     if(insert == false) break;
+                    }
+                    if(insert == false) break;
                 }
                 if(insert == true) newEmbeddings.add(em);
-                }
-            }
-        //System.out.println("size of new embeddings::" + newEmbeddings.size());
-        return newEmbeddings;
-    }
-
-    public List<Embedding> setEmbeddingsFromConstraint_V2(DifferentialConstraint cons, List<Embedding> embeddingsFromQuery){
-        List<Embedding> newEmbeddings = new ArrayList<>();
-        for(Embedding em: embeddingsFromQuery) {
-            for(Tuple4<String> tuples : cons.tuplesOfThisConstraint){
-                String id1 = tuples.v2;
-                String id2 = tuples.v4;
-            }
-            for(HashMap<String,String> la :cons.embeddingsIds) {
-                Set<String> s = la.keySet();
-                boolean insert = false;
-                for(String var: s) {
-                    insert = false;
-                    if(em.nodes.containsKey(var)) {
-                        if(em.nodes.get(var).get("id").equals(la.get(var))){
-                            insert = true;
-                        }else if(em.edges.containsKey(var)){
-                            if(em.edges.get(var).get("id").equals(la.get(var))){
-                                insert = true;
-                            }
-                        }
-                        if(insert == false) break;
-                    }
-                    if(insert == true) newEmbeddings.add(em);
-                }
             }
         }
         return newEmbeddings;
-    }
-
-    public List<Embedding> setEmbeddingsFromConstraintFirst(DifferentialConstraint cons){
-        List<Embedding> newEmbeddings = new ArrayList<>();
-        for(HashMap<String, String> em: cons.embeddingsIds){
-            Embedding emb = new Embedding(this.pattern);
-            if(pattern.getVertices().size() > 0){
-                String id = em.get("0");
-                emb.nodes.put( "0", this.pg.getNode(id, pattern.getVertices().iterator().next().nodeLabel.toString()));
-            }else{
-                String id = em.get("0");
-                emb.nodes.put("0", this.pg.getEdge(id, pattern.getEdges().iterator().next().label.toString()));
-            }
-            newEmbeddings.add(emb);
-        }
-        return newEmbeddings;
-    }
-
-    public Collection<GGDLatticeNode<NodeType, EdgeType>> HorizontalExtendFirst(DFSCode<NodeType, EdgeType> extendedNode, GSpanEdge<NodeType, EdgeType> extension){
-        List<GGDLatticeNode<NodeType, EdgeType>> returnNodes = new ArrayList<>();
-        GraphPattern pattern = new GraphPattern();
-        pattern.setGraphPattern(this.getHPlistGraph());
-        PatternQuery query = new PatternQuery(pattern);
-        String edgelabel = this.pg.getLabelCodes().get(extension.getEdgeLabel());
-        query.setEmbeddingsFromEdges(this.pg.getEdgesProperties_Id().get(edgelabel).values());
-        //query.runQuery(); --> Use only when variables are not available
-        DifferentialConstraintDiscovery discovery = new DifferentialConstraintDiscovery(query);
-        //pass what was extended as parameter
-        List<DifferentialConstraint> constraints = discovery.discoverAllConstraint(extension);
-        if (constraints== null) return returnNodes;
-        for(DifferentialConstraint cons: constraints){
-            GGDLatticeNode<NodeType, EdgeType> latticeNode = new GGDLatticeNode<>(extendedNode);
-            returnNodes.add(latticeNode);
-        }
-        return returnNodes;
     }
 
     public Collection<GGDLatticeNode<NodeType, EdgeType>> HorizontalExtendFirst_AG(DFSCode<NodeType, EdgeType> extendedNode, GSpanEdge<NodeType, EdgeType> extension) throws CloneNotSupportedException {
@@ -222,7 +127,7 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
         pattern = new GraphPattern();
         pattern.setGraphPatternWithLabels(this.getHPlistGraph(), this.pg.getLabelCodes());
         query = new PatternQuery(pattern);
-        query.getAnswergraph().initializeSingleEdgePatterns();
+        query.getAnswergraph().initializeSingleEdgePatterns_V2();
         DifferentialConstraintDiscovery_AG discovery = new DifferentialConstraintDiscovery_AG(query);
         GGDLatticeNode<NodeType, EdgeType> node = new GGDLatticeNode<>(extendedNode);
         node.query = query;
@@ -304,8 +209,6 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
     public List<EmbeddingId> defactorize(Set<String> variables){
         List<EmbeddingId> embIds = new LinkedList<>();
         int size =0;
-        //System.out.println("Pretty print of defactorization" + variables);
-      //  this.query.gp.prettyPrint();
         if(this.query.gp.getEdges().size() == 0){
             String var = (String) this.query.gp.getVerticesVariables().iterator().next();
             Set<String> nodeIds = this.query.getAnswergraph().getNodeIds(var);
@@ -343,8 +246,6 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
                     nodeB = String.valueOf(edgeToEvaluate.getNodeA());
                 }
                 if(embIds.isEmpty()){
-                    //first edge --> adicionar a embids;
-                   //this.pattern.prettyPrint();
                     AGEdge<NodeType, EdgeType> edgeToDefactorize = ag.edges.get(edgeVar);
                     for(String edge: edgeToDefactorize.edgeSrcTrg.keySet()){
                         EmbeddingId emb = new EmbeddingId(this.query.gp);
@@ -361,6 +262,7 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
                         if(emb.nodes.containsKey(nodeA)) {
                             String fromId = emb.nodes.get(nodeA);
                             if (!emb.nodes.containsKey(nodeB)) {
+                                //outgoing node --> forward edge
                                 VertexEntry<NodeType, EdgeType> entry = (VertexEntry<NodeType, EdgeType>) ag.nodes.get(nodeA).vertices.get(fromId);
                                 for (Tuple<String, String> edgesOutgoing : entry.getAdjacentEdgesOutgoing()) {
                                     if (edgeToDefactorize.hasEdge(edgesOutgoing.x) && !emb.containNode(edgesOutgoing.y)) {
@@ -387,6 +289,7 @@ public class GGDLatticeNode<NodeType, EdgeType> extends DFSCode<NodeType, EdgeTy
                             String fromId = emb.nodes.get(nodeB);
                             if (!emb.nodes.containsKey(nodeA)) {
                                 //outgoing node --> forward edge
+                                //String toId = emb.nodes.get(nodeB);
                                 VertexEntry<NodeType, EdgeType> entry = (VertexEntry<NodeType, EdgeType>) ag.nodes.get(nodeB).vertices.get(fromId);
                                 for (Tuple<String, String> edgesOutgoing : entry.getAdjacentEdgesOutgoing()) {
                                     if (edgeToDefactorize.hasEdge(edgesOutgoing.x) && !emb.containNode(edgesOutgoing.y)) {

@@ -1,11 +1,11 @@
-package main.java.minerDataStructures.similarityMeasures;
+package minerDataStructures.nngraph.similarityMeasures;
 
-import main.java.GGD.Constraint;
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.DifferentialConstraint;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.nngraph.SimilarityInterface;
-import main.java.minerUtils.DistanceFunctions;
+import ggdBase.Constraint;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.DifferentialConstraint;
+import minerDataStructures.Embedding;
+import minerDataStructures.nngraph.SimilarityInterface;
+import minerUtils.DistanceFunctions;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class NaiveLatticeNodeSimilarity<NodeType,EdgeType> implements Similarity
         copy.addAll(emb1);
         boolean intersect = copy.retainAll(emb2);
         if(intersect){
-            return Double.valueOf(copy.size())/Math.max(emb1.size(), emb2.size());
+            return Double.valueOf(copy.size())/ Math.max(emb1.size(), emb2.size());
         }else return 0.0;
     }
 

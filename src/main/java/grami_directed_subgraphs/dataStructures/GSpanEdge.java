@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 import java.io.Serializable;
 
@@ -34,9 +34,9 @@ import java.io.Serializable;
  *            .equals(..))
  */
 public class GSpanEdge<NodeType, EdgeType> implements
-		Comparable<GSpanEdge<NodeType, EdgeType>>,
+        Comparable<GSpanEdge<NodeType, EdgeType>>,
 		Cloneable<GSpanEdge<NodeType, EdgeType>>, Generic<NodeType, EdgeType>,
-		Serializable {
+        Serializable {
 
 	/**
 	 * 
@@ -260,8 +260,8 @@ public class GSpanEdge<NodeType, EdgeType> implements
 	 * @return the reinitialized edge
 	 */
 	public GSpanEdge<NodeType, EdgeType> set(final int nodeA, final int nodeB,
-			final int labelA, final int edgeLabel, final int labelB,
-			final int direction, int THElabelA, int THElabelB) {
+                                             final int labelA, final int edgeLabel, final int labelB,
+                                             final int direction, int THElabelA, int THElabelB) {
 		this.nodeA = nodeA;
 		this.nodeB = nodeB;
 		this.edgeLabel = edgeLabel;

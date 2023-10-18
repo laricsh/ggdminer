@@ -17,11 +17,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.Dijkstra.*;
-import main.java.grami_directed_subgraphs.dataStructures.*;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.Dijkstra.DenseRoutesMap;
+import grami_directed_subgraphs.Dijkstra.DijkstraEngine;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.util.*;
 
@@ -41,7 +42,7 @@ public class Searcher<NodeType, EdgeType>
 	
 	private String path;
 	
-	public Searcher(String path, int freqThreshold,int shortestDistance) throws Exception
+	public Searcher(String path, int freqThreshold, int shortestDistance) throws Exception
 	{
 		this.freqThreshold= new IntFrequency(freqThreshold);
 		this.distanceThreshold=shortestDistance;
@@ -60,28 +61,28 @@ public class Searcher<NodeType, EdgeType>
 	public void initialize()
 	{
 		initials= new TreeMap<GSpanEdge<NodeType, EdgeType>, DFSCode<NodeType, EdgeType>>(new gEdgeComparator<NodeType, EdgeType>());
-		HashMap<Integer, HashMap<Integer,myNode>> freqNodesByLabel=  singleGraph.getFreqNodesByLabel();
+		HashMap<Integer, HashMap<Integer, myNode>> freqNodesByLabel=  singleGraph.getFreqNodesByLabel();
 		HashSet<Integer> contains= new HashSet<Integer>();
-		for (Iterator<  Map.Entry< Integer, HashMap<Integer,myNode> > >  it= freqNodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<  Map.Entry<Integer, HashMap<Integer, myNode>> > it = freqNodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
 
-			Map.Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Map.Entry<Integer, HashMap<Integer, myNode>> ar =  it.next();
 			int firstLabel=ar.getKey();
 			contains.clear();
-			HashMap<Integer,myNode> tmp = ar.getValue();
-			for (Iterator<myNode> iterator = tmp.values().iterator(); iterator.hasNext();) 
+			HashMap<Integer, myNode> tmp = ar.getValue();
+			for (Iterator<myNode> iterator = tmp.values().iterator(); iterator.hasNext();)
 			{
 				myNode node =  iterator.next();
 				HashMap<Integer, ArrayList<MyPair<Integer, Double>>> neighbours=node.getReachableWithNodes();
 				if(neighbours!=null)
-				for (Iterator<Integer>  iter= neighbours.keySet().iterator(); iter.hasNext();) 
+				for (Iterator<Integer> iter = neighbours.keySet().iterator(); iter.hasNext();)
 				{
 					int secondLabel = iter.next();
 					int labelA=sortedFrequentLabels.indexOf(firstLabel);
 					int labelB=sortedFrequentLabels.indexOf(secondLabel);
 					
 					//iterate over all neighbor nodes to get edge labels as well
-					for (Iterator<MyPair<Integer, Double>>  iter1= neighbours.get(secondLabel).iterator(); iter1.hasNext();)
+					for (Iterator<MyPair<Integer, Double>> iter1 = neighbours.get(secondLabel).iterator(); iter1.hasNext();)
 					{
 						MyPair<Integer, Double> mp = iter1.next();
 						double edgeLabel = mp.getB();
@@ -90,7 +91,7 @@ public class Searcher<NodeType, EdgeType>
 						
 						int secondNodeID = mp.getA();
 					
-						final GSpanEdge<NodeType, EdgeType> gedge = new GSpanEdge <NodeType, EdgeType>().set(0, 1, labelA, (int)edgeLabel, labelB, 1, firstLabel, secondLabel);
+						final GSpanEdge<NodeType, EdgeType> gedge = new GSpanEdge<NodeType, EdgeType>().set(0, 1, labelA, (int)edgeLabel, labelB, 1, firstLabel, secondLabel);
 					
 						if(!initials.containsKey(gedge))
 						{

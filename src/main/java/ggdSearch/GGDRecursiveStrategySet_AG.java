@@ -1,15 +1,15 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.GGD;
-import main.java.grami_directed_subgraphs.dataStructures.DFSCode;
-import main.java.grami_directed_subgraphs.dataStructures.Frequented;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.grami_directed_subgraphs.search.Algorithm;
-import main.java.grami_directed_subgraphs.search.SearchLatticeNode;
-import main.java.grami_directed_subgraphs.search.Strategy;
-import main.java.minerDataStructures.GraphPatternIndex;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import ggdBase.GGD;
+import grami_directed_subgraphs.dataStructures.DFSCode;
+import grami_directed_subgraphs.dataStructures.Frequented;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.search.Algorithm;
+import grami_directed_subgraphs.search.SearchLatticeNode;
+import grami_directed_subgraphs.search.Strategy;
+import minerDataStructures.GraphPatternIndex;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.answergraph.AnswerGraph;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,6 +34,7 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
         this.graphPatternIndex = graphPatternIndex;
         this.graphPatternIndex.addAllNodes(set);
         this.size = size;
+        System.out.println("kedge::::" + this.graphPatternIndex.getKedges());
     }
 
     /*
@@ -52,18 +53,21 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
         System.out.println(algo.initialNodes().hasNext());
 
         extender = algorithm.getExtender(freqThresh);
-        // algorithm.getExtender(freqThresh);
 
         System.out.println("#############------Entering Recursive Strategy!!!!!!!!!-------############");
-
-        //System.out.println("Number of GGD Children first:" + extender.ggdschildrenCodes.size());
-        //System.out.println("Number of GGD Brothers first:" + extender.brothers.size());
 
         for (final Iterator<SearchLatticeNode<NodeType, EdgeType>> it = algo
                 .initialNodes(); it.hasNext();) {
             final SearchLatticeNode<NodeType, EdgeType> code = it.next();
-            //List<Embedding> initialEmbeddings =
             final long time = System.currentTimeMillis();
+//			if (VERBOSE) {
+//				out.print("doing seed " + code + " ...");
+//			}
+//			if (VVERBOSE) {
+//				out.println();
+//			}
+            //System.out.println("Searching into: "+code);
+            //System.out.println("*********************************");
             System.out.println("Initializing Answer graph for node:" + code.getHPlistGraph().toString());
             GGDLatticeNode<NodeType, EdgeType> dadCode = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>) code, true);
             System.out.println("Done initializing --> starting search procedure");
@@ -76,9 +80,80 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
         Set<GGD> tmp = graphPatternIndex.extractGGDsMethod();//graphPatternIndex.extractGGDs();
         System.out.println("GGDs Extracted!");
         result.addAll(tmp);
+        return ret;
+    }
+
+    public Collection<HPListGraph<NodeType, EdgeType>> search_noAG(  //INITIAL NODES SEARCH
+                                                                     final Algorithm<NodeType, EdgeType> algo,int freqThresh) throws CloneNotSupportedException, IOException {
+        ret = new ArrayList<HPListGraph<NodeType, EdgeType>>();
+
+        result = new HashSet<GGD>();
+
+        GGDAlgorithm algorithm = (GGDAlgorithm)algo;
+        System.out.println(algo.initialNodes().hasNext());
+
+        extender = algorithm.getExtender(freqThresh);
+        // algorithm.getExtender(freqThresh);
+
+        System.out.println("#############------Entering Recursive Strategy!!!!!!!!!-------############");
+
+        //System.out.println("Number of GGD Children first:" + extender.ggdschildrenCodes.size());
+        //System.out.println("Number of GGD Brothers first:" + extender.brothers.size());
+
+        for (final Iterator<SearchLatticeNode<NodeType, EdgeType>> it = algo
+                .initialNodes(); it.hasNext();) {
+            final SearchLatticeNode<NodeType, EdgeType> code = it.next();
+            final long time = System.currentTimeMillis();
+            System.out.println("Initializing Answer graph for node:" + code.getHPlistGraph().toString());
+            GGDLatticeNode<NodeType, EdgeType> dadCode = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>) code, true);
+            System.out.println("Done initializing --> starting search procedure");
+            search(code, dadCode);
+            it.remove();
+        }
+
+        System.out.println("Start GGD Extraction procedure!");
+        Set<GGD> tmp = graphPatternIndex.extractGGDsMethod_NoAG();//graphPatternIndex.extractGGDs();
+        System.out.println("GGDs Extracted!");
+        result.addAll(tmp);
+        return ret;
+    }
+
+
+    public Collection<HPListGraph<NodeType, EdgeType>> search_NoExtraction(  //INITIAL NODES SEARCH
+                                                                             final Algorithm<NodeType, EdgeType> algo,int freqThresh) throws CloneNotSupportedException, IOException {
+        ret = new ArrayList<HPListGraph<NodeType, EdgeType>>();
+
+        result = new HashSet<GGD>();
+
+        GGDAlgorithm algorithm = (GGDAlgorithm)algo;
+        System.out.println(algo.initialNodes().hasNext());
+
+        extender = algorithm.getExtender(freqThresh);
+        // algorithm.getExtender(freqThresh);
+
+        System.out.println("#############------Entering Recursive Strategy!!!!!!!!!-------############");
+
+        //System.out.println("Number of GGD Children first:" + extender.ggdschildrenCodes.size());
+        //System.out.println("Number of GGD Brothers first:" + extender.brothers.size());
+
+        for (final Iterator<SearchLatticeNode<NodeType, EdgeType>> it = algo
+                .initialNodes(); it.hasNext();) {
+            final SearchLatticeNode<NodeType, EdgeType> code = it.next();
+            final long time = System.currentTimeMillis();
+            System.out.println("Initializing Answer graph for node:" + code.getHPlistGraph().toString());
+            GGDLatticeNode<NodeType, EdgeType> dadCode = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>) code, true);
+            System.out.println("Done initializing --> starting search procedure");
+            search(code, dadCode);
+            it.remove();
+
+        }
+
+        System.out.println("Start GGD Extraction procedure!");
+        System.out.println(ret.size());
 
         return ret;
     }
+
 
     @SuppressWarnings("unchecked")
     private void search(final SearchLatticeNode<NodeType, EdgeType> node, GGDLatticeNode<NodeType,EdgeType> dadNode) throws CloneNotSupportedException {  //RECURSIVE NODES SEARCH
@@ -88,6 +163,7 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
                 .getChildren(node);
 
         GGDLatticeNode<NodeType, EdgeType> currNode = new GGDLatticeNode<NodeType, EdgeType>((DFSCode<NodeType, EdgeType>) node, false);
+        if(currNode.query.gp.getEdges().size() > this.graphPatternIndex.getKedges()) return;
 
         //System.out.println("########-Recursion-------Brother:" + extender.brothers.size());
 
@@ -96,6 +172,7 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
 
         if(node.store() && !node.getHPlistGraph().toString().equals(dadNode.getHPlistGraph().toString())) {
             System.out.println("Answer graph extension for " + node.getHPlistGraph().toString());
+            System.out.println(((DFSCode<NodeType, EdgeType>) node).getLast().toString());
             AnswerGraph<NodeType, EdgeType> ag = extender.ExtendEmbeddings_AG(node, ((DFSCode<NodeType, EdgeType>) node).getLast(), dadNode.query.getAnswergraph(), size);
             if(ag.getNodesSize() == 0 && ag.getEdgesSize() == 0){
                 return;
@@ -103,9 +180,11 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
             currNode.query.setAnswergraph(ag);
             System.out.println("######## extension done ######");
             int change_tmp3 = graphPatternIndex.addNode(currNode);
+            System.out.println("Start differential constraints extension");
             if(GGDSearcher.simExtension) {
                 Collection<GGDLatticeNode<NodeType, EdgeType>> horizontalExtension = extender.getHorizontalExpansion_AG(currNode, ((DFSCode<NodeType, EdgeType>) currNode).getLast());
                 int change_tmp = graphPatternIndex.addAllNodes(horizontalExtension);
+                System.out.println("Horizontal Extension done!");
                 Collection<GGDLatticeNode<NodeType, EdgeType>> dadBrotherNodes = searchForBrotherNodes(dadNode);
                 Collection<GGDLatticeNode<NodeType, EdgeType>> horizontalExtensionConsideringDadNode = extender.getHorizontalExpansionDadNode_AG(dadBrotherNodes, horizontalExtension);
                 int change_tmp2 = graphPatternIndex.addAllNodes(horizontalExtensionConsideringDadNode);
@@ -113,6 +192,7 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
                     change = 1;
                 }
             }
+            System.out.println("Horizontal expansion done!");
 
         }else{
             currNode = dadNode;
@@ -128,7 +208,9 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
 
         //if(change == 0) return;
         if(tmp.isEmpty()) return;
+
         if(currNode.query.gp.getEdges().size() >= this.graphPatternIndex.getKedges()) return;
+
 
 
         for (final SearchLatticeNode<NodeType, EdgeType> child : tmp) {
@@ -138,6 +220,7 @@ public class GGDRecursiveStrategySet_AG<NodeType, EdgeType> implements Strategy<
             System.out.println("   branching into: "+child);
             System.out.println("   ---------------------");
             search(child, currNode);
+            //search(child, extender.node);
 
 
         }

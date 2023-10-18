@@ -12,10 +12,10 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.dataStructures.Extension;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanExtension;
+import grami_directed_subgraphs.dataStructures.Extension;
+import grami_directed_subgraphs.dataStructures.GSpanExtension;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -34,7 +34,7 @@ import java.util.TreeSet;
  *            .equals(..))
  */
 public class GSpanExtender<NodeType, EdgeType> extends
-		MiningStep<NodeType, EdgeType> implements Extender<NodeType, EdgeType> {
+        MiningStep<NodeType, EdgeType> implements Extender<NodeType, EdgeType> {
 
 	public MiningStep<NodeType, EdgeType> first;
 

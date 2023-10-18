@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 import java.util.BitSet;
 
@@ -45,7 +45,7 @@ public class DFScodeSerializer
 		{
 			int node1=graph.getNodeA(edgeIdx);
 			int node2=graph.getNodeB(edgeIdx);
-			int edgeLabel=Integer.parseInt((String)graph.getEdgeLabel(edgeIdx));
+			int edgeLabel= Integer.parseInt((String)graph.getEdgeLabel(edgeIdx));
 			if(graph.getDirection(edgeIdx)>=0)
 			{text += "e " + node1
 			+ " " + node2

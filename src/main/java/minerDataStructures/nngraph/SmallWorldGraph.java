@@ -1,7 +1,7 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.Tuple;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.Tuple;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,6 +45,7 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
 
 
     public void computeGraphNodes(List<T> nodes, Integer f) {
+        //fazer matriz de distancia
         System.out.println("Nodes size::" + nodes.size());
         int i = 0;
         nodes.forEach((v) -> {
@@ -68,12 +69,17 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
         });
     }
 
+    //inserir um a um procurar os f mais próximos dentro dos que já estão no grafo
     public NeighborList NSWNeighborList(T v, Integer f, Integer size) {
         //a ser inserido: v
         //graph para procurar os mais proximos
         NeighborList nl = new NeighborList(size);
         ArrayList<T> nodes = new ArrayList<>();
         Integer w = 10; //w == numerod e multisearches
+        //nl = NSWkNNSearch(v, f, w, graph, nl);
+        //while (graph.getNodes().iterator().hasNext()) {
+        //    nodes.add(graph.getNodes().iterator().next());
+        //}//heap space aqui
         nodes.addAll(getHashMap().keySet());
         Random rand = new Random();
         if (nodes.size() == 0) {
@@ -83,6 +89,8 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
         if (enterPoint == null) {
             return nl;//se for o primeiro retrna null
         }
+        //System.out.println(v.toString());
+        //System.out.println("AQUI");
         List<Neighbor> nlSearch = NSWkSearchAttempts(v, f, w, nodes);//hashMap com o resultado da busca para insercao
         int i = 0;
         for (Neighbor e : nlSearch) {
@@ -94,6 +102,13 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
                 nl.add(e);
                 //adiconar v como neighbor de e
                 System.out.println("----");
+                /*NeighborList vNl = graph.getNeighbors(v);
+                System.out.println(vNl.size());
+                if (!vNl.containsNode(e.node) || vNl.isEmpty()) {
+                    vNl.add(e);
+                    graph.put((T) e.node, vNl);
+                    //adiconar e como neighbor de v
+                }*/
             }
         }
         // nl = graph.NSWkNNSearch(v, f, w);
@@ -112,12 +127,18 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
         HashMap<T, Double> visitedSet = new HashMap<>();
         Map<T, Double> viewedMap = new HashMap();
         TreeSet<Neighbor> globalViewedSet = new TreeSet();
+        //Set <MetricElement> globalViewedHashSet = new HashSet <MetricElement> ();
+        // TreeSet <EvaluatedElement> globalViewedSet = new TreeSet();
+        // Set <MetricElement> visitedSet = new HashSet();
         for (int i = 0; i < w; i++) {
             //usar aqui o kSearch
             Random rand = new Random();
             T enterPoint = nodes.get(rand.nextInt(nodes.size()));
+            //System.out.println(enterPoint.toString());
             List<Neighbor> list = NSWkSearch(query, enterPoint, k, globalViewedSet);
+            //ver o que faz aqui depois
             result.addAll(list);
+            //fazer busca no NSWkSearch
         }
         return result;
     }
@@ -132,13 +153,16 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
      * @return
      */
     public List<Neighbor> NSWkSearch(T query, T enterPoint, int k1, TreeSet<Neighbor> globalViewedSet) {
-        double lowerBound = Double.MIN_VALUE;
+        double lowerBound = Double.MIN_VALUE;//ordenando pela similaridade não distancia
         Set visitedSet = new HashSet<>(); //the set of elements which has used to extend our view represented by viewedSet
         TreeSet<Neighbor> viewedSet = new TreeSet(); //the set of all elements which distance was calculated
         //  Map <MetricElement, Double> viewedMap = new HashMap ();
         TreeSet<Neighbor> candidateSet = new TreeSet(); //the set of elememts which we can use to e
         //null pointer?
         double sim = this.getSimilarity().distance(query, enterPoint);
+        //double sim = similarity.distance(query, enterPoint);
+        //problema no calculo de similaridade
+        // System.out.println(sim);
         Neighbor ev = new Neighbor(enterPoint, 1 / (1 + sim));
         //Neighbor ev = new Neighbor(enterPoint, sim);
         candidateSet.add(ev);
@@ -150,7 +174,7 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
             candidateSet.remove(currEv);
             lowerBound = getKDistance(viewedSet, this.getK());
             //check condition for lower bound
-            if (currEv.similarity < lowerBound) {
+            if (currEv.similarity < lowerBound) {//se a similaridade for maior que a similaridade calculada
                 break;
             }
             visitedSet.add(currEv.node);
@@ -160,7 +184,8 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
                 for (Neighbor el : neighbor) {
                     if (!globalViewedSet.contains(el)) {
                         Double dist = this.getSimilarity().distance(query, (T) el.node);
-                        Neighbor evEl = new Neighbor(el.node, 1 / (1 + dist));
+                        Neighbor evEl = new Neighbor(el.node, 1 / (1 + dist));//ordenar pela similaridade
+                        //EvaluatedElement evEl = new EvaluatedElement(query.calcDistance(el), el);
                         globalViewedSet.add(el);
                         viewedSet.add(evEl);
                         candidateSet.add(evEl);
@@ -208,6 +233,34 @@ public class SmallWorldGraph<T> extends NNGraph<T> {
         }
         return neighboringList;
     }
+
+
+    /*public List<Neighbor> NSWkRangeSearch(T query, double threshold, int maxHops){
+        List<Tuple<Neighbor, Double>> checkNeighborSet = new ArrayList<>();
+        int hopsCounter = 1;
+        List<Neighbor> result = new ArrayList<>();
+        NeighborList firstHopList = getNeighbors(query);
+        for(Neighbor el : firstHopList){
+            if(el.similarity >= threshold){
+                result.add(el);
+            }else{
+                checkNeighborSet.add(new Tuple<Neighbor,Double>(el, el.similarity));
+            }
+        }
+        Set<Neighbor> finalResults = new HashSet<>();
+        finalResults.addAll(result);
+        for(Neighbor aboveThreshold : result){
+            List<Neighbor> allNeighbors = addNeighborsToResult(aboveThreshold, hopsCounter, maxHops);
+            finalResults.addAll(allNeighbors);
+        }
+        for(Tuple<Neighbor, Double> toCheck: checkNeighborSet){
+            List<Neighbor> checkNeighbors = addNeighborsToResultFromCandidate(toCheck, hopsCounter, maxHops, threshold);
+            finalResults.addAll(checkNeighbors);
+        }
+        List<Neighbor> returnAll = new ArrayList<>();
+        returnAll.addAll(finalResults);
+        return returnAll;
+    }*/
 
     /**
      * @param treeSet

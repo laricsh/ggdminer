@@ -1,6 +1,6 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.GGD.GraphPattern;
+import ggdBase.GraphPattern;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -19,7 +19,6 @@ public class EmbeddingId {
 
     public EmbeddingId(GraphPattern pattern){
         this.pattern = pattern;
-        //this.pattern = new GraphPattern(pg);
     }
 
     public EmbeddingId(EmbeddingId emb){

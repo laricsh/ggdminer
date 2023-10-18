@@ -12,11 +12,11 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.dataStructures.*;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.awt.*;
 import java.util.*;
@@ -39,7 +39,7 @@ import java.util.*;
  *            .equals(..))
  */
 public class RightMostExtension<NodeType, EdgeType> extends
-		GenerationPartialStep<NodeType, EdgeType> {
+        GenerationPartialStep<NodeType, EdgeType> {
 
 	public static int counter = 0;
 	
@@ -71,7 +71,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 	 * //@param nodeB
 	 */
 	protected void add(final GSpanEdge<NodeType, EdgeType> gEdge,
-			final DFSCode<NodeType, EdgeType> code,int type) {
+                       final DFSCode<NodeType, EdgeType> code, int type) {
 		// search corresponding extension
 		GSpanExtension<NodeType, EdgeType> ext = children.get(gEdge);
 		//~
@@ -83,7 +83,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 			gEdge.addTo(ng);  //reformulate the form of the new extended fragment!!
 			ext = new GSpanExtension<NodeType, EdgeType>();
 			ext.edge=gEdge;
-			ext.frag=new DFSCode<NodeType, EdgeType>(code.getSortedFreqLabels(), code.getSingleGraph(), main.java.grami_directed_subgraphs.utilities.Util.clone(code.getNonCandidates())).set((HPListGraph<NodeType, EdgeType>)ng,code.getFirst() , code.getLast(),code.getParents());
+			ext.frag=new DFSCode<NodeType, EdgeType>(code.getSortedFreqLabels(), code.getSingleGraph(), grami_directed_subgraphs.utilities.Util.clone(code.getNonCandidates())).set((HPListGraph<NodeType, EdgeType>)ng,code.getFirst() , code.getLast(),code.getParents());
 			ext.frag = (DFSCode<NodeType, EdgeType>) code.extend(ext); //PUT THE STRING HERE
 
 			children.put(gEdge, ext);   //TODO push into Children !!!
@@ -120,7 +120,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 		extend((DFSCode<NodeType, EdgeType>) node);
 		callNext(node); //malhash aii lazma
 	}
-	protected final void extend(final DFSCode<NodeType, EdgeType> code) 
+	protected final void extend(final DFSCode<NodeType, EdgeType> code)
 	{
 		System.out.println("Extending code: "+code);
 		
@@ -149,7 +149,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 			{
 				int theLabelB= iterator.next();
 				int index=sortedFreqLabels.indexOf(theLabelB);
-				pairs.add(new Point(theLabelB,index));				
+				pairs.add(new Point(theLabelB,index));
 			} 
 			Collections.sort(pairs,new freqComparator());
 			
@@ -163,7 +163,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 				
 				for(int j=0;j<freqEdgeLabels.size();j++)
 				{
-					final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, lastNode+1 , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), index, 1, theLabelA, label); 											
+					final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, lastNode+1 , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), index, 1, theLabelA, label);
 					if ((code.getLast().compareTo(gEdge) < 0))
 					{
 						add(gEdge, code,0);
@@ -180,7 +180,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 			{
 				int theLabelB= iterator.next();
 				int index=sortedFreqLabels.indexOf(theLabelB);
-				pairs.add(new Point(theLabelB,index));				
+				pairs.add(new Point(theLabelB,index));
 			} 
 			Collections.sort(pairs,new freqComparator());
 			
@@ -193,7 +193,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 				int index=currentPoint.y;
 				for(int j=0;j<freqEdgeLabels.size();j++)
 				{
-					final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, lastNode+1 , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), index, -1, theLabelA, label); 											
+					final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, lastNode+1 , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), index, -1, theLabelA, label);
 					if ((code.getLast().compareTo(gEdge) < 0))
 					{
 						add(gEdge, code,0);
@@ -232,7 +232,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 					int theLabelB=candidateVB.getLabel();
 					for(int j=0;j<freqEdgeLabels.size();j++)
 					{
-						final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, candidateVB.getID() , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), sortedFreqLabels.indexOf(theLabelB), 1, theLabelA, theLabelB); 											
+						final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, candidateVB.getID() , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), sortedFreqLabels.indexOf(theLabelB), 1, theLabelA, theLabelB);
 						if ((code.getLast().compareTo(gEdge) < 0))
 						{
 							add(gEdge, code,1);
@@ -273,7 +273,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 					int theLabelB=candidateVB.getLabel();
 					for(int j=0;j<freqEdgeLabels.size();j++)
 					{
-						final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, candidateVB.getID() , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), sortedFreqLabels.indexOf(theLabelB), -1, theLabelA, theLabelB); 											
+						final GSpanEdge<NodeType, EdgeType> gEdge = new GSpanEdge<NodeType, EdgeType>().set(lastNode, candidateVB.getID() , sortedFreqLabels.indexOf(theLabelA), freqEdgeLabels.get(j).intValue(), sortedFreqLabels.indexOf(theLabelB), -1, theLabelA, theLabelB);
 						if ((code.getLast().compareTo(gEdge) < 0))
 						{
 							add(gEdge, code,1);
@@ -302,7 +302,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 			{
 				int theLabelB= iterator.next();
 				int index=sortedFreqLabels.indexOf(theLabelB);
-				pairs.add(new Point(theLabelB,index));				
+				pairs.add(new Point(theLabelB,index));
 			} 
 			Collections.sort(pairs,new freqComparator());
 			//now create the forward edges!!!
@@ -335,7 +335,7 @@ public class RightMostExtension<NodeType, EdgeType> extends
 			{
 				int theLabelB= iterator.next();
 				int index=sortedFreqLabels.indexOf(theLabelB);
-				pairs.add(new Point(theLabelB,index));				
+				pairs.add(new Point(theLabelB,index));
 			} 
 			Collections.sort(pairs,new freqComparator());
 			//now create the forward edges!!!

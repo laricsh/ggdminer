@@ -17,12 +17,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.utilities;
+package grami_directed_subgraphs.utilities;
 
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class DfscodesCache 
 {
-	public static HashMap<String, HashMap<Integer, HashSet<Integer>>> cache= new HashMap<String, HashMap<Integer,HashSet<Integer>>>();
+	public static HashMap<String, HashMap<Integer, HashSet<Integer>>> cache= new HashMap<String, HashMap<Integer, HashSet<Integer>>>();
 }

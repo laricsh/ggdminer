@@ -17,11 +17,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.decomposer;
+package grami_directed_subgraphs.decomposer;
 
-import main.java.grami_directed_subgraphs.dataStructures.DFSCode;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.grami_directed_subgraphs.dataStructures.IntIterator;
+import grami_directed_subgraphs.dataStructures.DFSCode;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.dataStructures.IntIterator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,16 +39,16 @@ public class Decomposer<NodeType, EdgeType>
 		return mappings;
 	}
 
-	public Decomposer(DFSCode<NodeType, EdgeType> code) 
+	public Decomposer(DFSCode<NodeType, EdgeType> code)
 	{
 		this.code=code;
-		mappings = new ArrayList<HashMap<HPListGraph<NodeType,EdgeType>,ArrayList<Integer>>>();
+		mappings = new ArrayList<HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>>>();
 	}
 	
 	public Decomposer(HPListGraph<NodeType, EdgeType> graph) 
 	{
 		this.graph=graph;
-		mappings = new ArrayList<HashMap<HPListGraph<NodeType,EdgeType>,ArrayList<Integer>>>();
+		mappings = new ArrayList<HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>>>();
 	}
 	
 	
@@ -58,7 +58,7 @@ public class Decomposer<NodeType, EdgeType>
 		{
 			HashMap<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> currentMap= mappings.get(i);
 			System.out.println("when removing edge "+ i);
-			for (Iterator< Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = currentMap.entrySet().iterator(); iterator.hasNext();) 
+			for (Iterator<Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = currentMap.entrySet().iterator(); iterator.hasNext();)
 			{
 				Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> entry  = iterator.next();
 				System.out.println(entry.getKey());
@@ -89,7 +89,7 @@ public class Decomposer<NodeType, EdgeType>
 			int currentEdge=i;
 			HPListGraph<NodeType, EdgeType> newGraph=(HPListGraph<NodeType, EdgeType>)currentGraph.clone();
 			newGraph.removeEdge(currentEdge);
-			HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>> currentEdgeMapping = new  HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>>();
+			HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>> currentEdgeMapping = new HashMap<HPListGraph<NodeType,EdgeType>, ArrayList<Integer>>();
 			//Now pass by each node !!
 			for (int j = 0; j < newGraph.getNodeCount(); j++) 
 			{

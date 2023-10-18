@@ -1,15 +1,12 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.minerDataStructures.AttributePair;
-import main.java.minerDataStructures.DataTypes;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.preProcess.AttributeGroup;
-import main.java.preProcess.SchemaSemantic;
+import minerDataStructures.AttributePair;
+import minerDataStructures.DataTypes;
+import minerDataStructures.PropertyGraph;
+import preProcess.AttributeGroup;
+import preProcess.SchemaSemantic;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class AttributeSelection {
 
@@ -21,56 +18,88 @@ public class AttributeSelection {
     }
 
     public List<AttributePair> SchemaBasedPreProcess(){
-        SchemaSemantic<String, String> sc = new SchemaSemantic<>(pgraph, 0.75);
+        SchemaSemantic<String, String> sc = new SchemaSemantic<>(0.75);
         return sc.preprocess();
     }
 
     public List<AttributePair> AttributeBasedPreProcess(){
-        AttributeGroup<String, String> at = new AttributeGroup(pgraph, 5.0, 1);
+        AttributeGroup<String, String> at = new AttributeGroup( 5.0, 1);
         return at.preprocess();
     }
 
     public List<AttributePair> TestAllPairs(){
-       List<DataTypes> datatypes = pgraph.config.getDataTypes();
-       List<AttributePair> listAttributes = new ArrayList<>();
-       for(DataTypes d: datatypes){
-           for(String key: d.data.keySet()){
-               for(DataTypes d2: datatypes){
+        List<DataTypes> datatypes = pgraph.config.getDataTypes();
+        List<AttributePair> listAttributes = new ArrayList<>();
+        for(DataTypes d: datatypes){
+            for(String key: d.data.keySet()){
+                for(DataTypes d2: datatypes){
                     for(String key2: d2.data.keySet()) {
                         if (!key.equals("fromId") && !key2.equals("toId")) {
-                        if (d.data.get(key).equals(d2.data.get(key2))) {
-                            if (d.label.equals(d2.label) && !key.equals(key2)) {
-                                AttributePair pair = new AttributePair();
-                                pair.datatype = d.data.get(key);
-                                pair.label1 = d.label;
-                                pair.label2 = d2.label;
-                                pair.attributeName1 = key;
-                                pair.attributeName2 = key2;
-                                listAttributes.add(pair);
-                            } else if (!d.label.equals(d2.label)) {
-                                AttributePair pair = new AttributePair();
-                                pair.datatype = d.data.get(key);
-                                pair.label1 = d.label;
-                                pair.label2 = d2.label;
-                                pair.attributeName1 = key;
-                                pair.attributeName2 = key2;
-                                listAttributes.add(pair);
+                            if (d.data.get(key).equals(d2.data.get(key2))) {
+                                if (d.label.equals(d2.label) && !key.equals(key2)) {
+                                    AttributePair pair = new AttributePair();
+                                    pair.datatype = d.data.get(key);
+                                    pair.label1 = d.label;
+                                    pair.label2 = d2.label;
+                                    pair.attributeName1 = key;
+                                    pair.attributeName2 = key2;
+                                    listAttributes.add(pair);
+                                } else if (!d.label.equals(d2.label)) {
+                                    AttributePair pair = new AttributePair();
+                                    pair.datatype = d.data.get(key);
+                                    pair.label1 = d.label;
+                                    pair.label2 = d2.label;
+                                    pair.attributeName1 = key;
+                                    pair.attributeName2 = key2;
+                                    listAttributes.add(pair);
+                                }
                             }
                         }
                     }
-                    }
-               }
-           }
-       }
-       return listAttributes;//.subList(0,30); //just for testing a smaller amount
+                }
+            }
+        }
+        return listAttributes;
     }
 
     public HashMap<String, Set<String>> TestAllConstant(){
         HashMap<String, Set<String>> answer = new HashMap<>();
+        System.out.println("Label codes: " + this.pgraph.getLabelCodes().size());
         for(Integer code: this.pgraph.getLabelCodes().keySet()){
             String label = this.pgraph.getLabelCodes().get(code);
             Set<String> attr = this.pgraph.getLabelProperties(label);
             answer.put(code.toString(), attr);
+        }
+        return answer;
+    }
+
+    public HashMap<String, Set<String>> TestSetToCompare(){
+        System.out.println("Test set to compare - schema");
+        HashMap<String, Set<String>> answer = new HashMap<>();
+        for(AttributePair pair : this.pgraph.getSetToCompare()){
+            Integer code = this.pgraph.getCodeLabels().get(pair.label1);
+            Integer code2 = this.pgraph.getCodeLabels().get(pair.label2);
+            if(pair.attributeName1.equalsIgnoreCase("name")) {
+                if (answer.containsKey(code.toString())) {
+                    answer.get(code.toString()).add(pair.attributeName1);
+                } else {
+                    Set<String> set = new HashSet<>();
+                    set.add(pair.attributeName1);
+                    answer.put(code.toString(), set);
+                }
+            }
+            if(pair.attributeName2.equalsIgnoreCase("name")) {
+                if (answer.containsKey(code2.toString())) {
+                    answer.get(code2.toString()).add(pair.attributeName2);
+                } else {
+                    Set<String> set = new HashSet<>();
+                    set.add(pair.attributeName2);
+                    answer.put(code2.toString(), set);
+                }
+            }
+        }
+        for(String key: answer.keySet()){
+            System.out.println("Adding to set to verify:" + key + " attr" + answer.get(key));
         }
         return answer;
     }
@@ -92,6 +121,9 @@ public class AttributeSelection {
         System.out.println("Pre-process!!! - Constant verification");
         if(algorithm.equals("test")){
             return TestAllConstant();
+        }
+        if(algorithm.equals("schema")){
+            return TestSetToCompare();
         }
         return verification;
     }

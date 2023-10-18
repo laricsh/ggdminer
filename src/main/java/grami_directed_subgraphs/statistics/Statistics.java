@@ -17,9 +17,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.statistics;
+package grami_directed_subgraphs.statistics;
 
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ public class Statistics<NodeType, EdgeType>
 	int maxEdgeIndex;
 	HashMap<Integer, DistinctLabelStat> distinctLabels;
 	
-	public Statistics(ArrayList<HPListGraph<NodeType, EdgeType>> result) 
+	public Statistics(ArrayList<HPListGraph<NodeType, EdgeType>> result)
 	{
 		this.result=result;
 		distinctLabels= new HashMap<Integer, DistinctLabelStat>();
@@ -118,7 +118,7 @@ public class Statistics<NodeType, EdgeType>
 		}
 		
 		
-		for (Iterator<Integer> iterator = distinctLabelsSize.keySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Integer> iterator = distinctLabelsSize.keySet().iterator(); iterator.hasNext();)
 		{
 			Integer numOfDistinct =  iterator.next();
 			int distinctSize= distinctLabelsSize.get(numOfDistinct);
@@ -147,7 +147,7 @@ public class Statistics<NodeType, EdgeType>
         return difflabels.size();
     }
 	
-	public String toString2() 
+	public String toString2()
 	{
 		
 		String out=""+numberOfPatterns+",";
@@ -155,7 +155,7 @@ public class Statistics<NodeType, EdgeType>
 		out+=printPoint2(maxNode,maxNodeIndex)+",";
 		out+=printPoint2(maxEdge,maxEdgeIndex)+",";
 		
-		for (Iterator<Integer> iterator = distinctLabels.keySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Integer> iterator = distinctLabels.keySet().iterator(); iterator.hasNext();)
 		{
 			Integer numOfDistinct =  iterator.next();
 			DistinctLabelStat stat= distinctLabels.get(numOfDistinct);
@@ -167,7 +167,7 @@ public class Statistics<NodeType, EdgeType>
 	}
 	
 	@Override
-	public String toString() 
+	public String toString()
 	{
 		
 		String out=""+numberOfPatterns+", ";
@@ -175,7 +175,7 @@ public class Statistics<NodeType, EdgeType>
 		out+=printPoint(maxNode,maxNodeIndex)+", ";
 		out+=printPoint(maxEdge,maxEdgeIndex)+", ";
 		
-		for (Iterator<Integer> iterator = distinctLabels.keySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Integer> iterator = distinctLabels.keySet().iterator(); iterator.hasNext();)
 		{
 			Integer numOfDistinct =  iterator.next();
 			DistinctLabelStat stat= distinctLabels.get(numOfDistinct);
@@ -187,14 +187,14 @@ public class Statistics<NodeType, EdgeType>
 	}
 	
 	
-	private String printPoint(Point p,int index)
+	private String printPoint(Point p, int index)
 	{
 		String pair="(";
 		pair+=p.x+","+p.y+")"+":"+index;
 		return pair;
 	}
 	
-	private String printPoint2(Point p,int index)
+	private String printPoint2(Point p, int index)
 	{
 		String pair="";
 		pair+=p.x+"-"+p.y;

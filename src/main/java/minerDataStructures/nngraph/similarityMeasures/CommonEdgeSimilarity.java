@@ -1,9 +1,9 @@
-package main.java.minerDataStructures.similarityMeasures;
+package minerDataStructures.nngraph.similarityMeasures;
 
-import main.java.GGD.EdgesPattern;
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.minerDataStructures.Tuple4;
-import main.java.minerDataStructures.nngraph.SimilarityInterface;
+import ggdBase.EdgesPattern;
+import ggdSearch.GGDLatticeNode;
+import minerDataStructures.Tuple4;
+import minerDataStructures.nngraph.SimilarityInterface;
 
 import java.util.LinkedList;
 

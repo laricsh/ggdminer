@@ -17,15 +17,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.automorphism;
+package grami_directed_subgraphs.automorphism;
 
-import main.java.grami_directed_subgraphs.CSP.DFSSearch;
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.grami_directed_subgraphs.dataStructures.IntIterator;
-import main.java.grami_directed_subgraphs.dataStructures.Query;
-import main.java.grami_directed_subgraphs.dataStructures.myNode;
-import main.java.grami_directed_subgraphs.pruning.SPpruner;
+import grami_directed_subgraphs.CSP.DFSSearch;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.dataStructures.IntIterator;
+import grami_directed_subgraphs.dataStructures.Query;
+import grami_directed_subgraphs.dataStructures.myNode;
+import grami_directed_subgraphs.pruning.SPpruner;
 
 import java.util.HashMap;
 
@@ -38,16 +38,16 @@ public class Automorphism <NodeType, EdgeType>
 		return result;
 	}
 
-	private HashMap<Integer,myNode> nodes;
-	private HashMap<Integer,HashMap<Integer,myNode>> nodesByLabel;
+	private HashMap<Integer, myNode> nodes;
+	private HashMap<Integer, HashMap<Integer, myNode>> nodesByLabel;
 	private int resultCounter;
 	
-	public Automorphism(HPListGraph<NodeType, EdgeType> graph) 
+	public Automorphism(HPListGraph<NodeType, EdgeType> graph)
 	{
 		patternGraph=graph;
 		result= new Variable[graph.getNodeCount()];
 		nodes= new HashMap<Integer, myNode>();
-		nodesByLabel= new HashMap<Integer, HashMap<Integer,myNode>>();
+		nodesByLabel= new HashMap<Integer, HashMap<Integer, myNode>>();
 		
 		Query qry = new Query((HPListGraph<Integer, Double>)graph);
 		
@@ -60,7 +60,7 @@ public class Automorphism <NodeType, EdgeType>
 		for (int i = 0; i < graph.getNodeCount(); i++) 
 		{
 			myNode currentNode= nodes.get(i);
-			for (IntIterator currentEdges = graph.getEdgeIndices(i); currentEdges.hasNext();) 
+			for (IntIterator currentEdges = graph.getEdgeIndices(i); currentEdges.hasNext();)
 			{
 				int edge = currentEdges.next();
 				int direction=graph.getDirection(edge, i);
@@ -77,7 +77,7 @@ public class Automorphism <NodeType, EdgeType>
 		{
 			myNode currentNode = nodes.get(i);
 			
-			HashMap<Integer,myNode> currentLabelNodes= nodesByLabel.get(currentNode.getLabel());
+			HashMap<Integer, myNode> currentLabelNodes= nodesByLabel.get(currentNode.getLabel());
 			if(currentLabelNodes==null)
 			{
 				currentLabelNodes= new HashMap<Integer, myNode>();

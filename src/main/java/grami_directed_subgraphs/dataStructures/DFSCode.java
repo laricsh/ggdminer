@@ -12,16 +12,16 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
-import main.java.grami_directed_subgraphs.CSP.ConstraintGraph;
-import main.java.grami_directed_subgraphs.CSP.DFSSearch;
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.decomposer.Decomposer;
-import main.java.grami_directed_subgraphs.search.SearchLatticeNode;
-import main.java.grami_directed_subgraphs.utilities.DfscodesCache;
-import main.java.grami_directed_subgraphs.utilities.Settings;
-import main.java.grami_directed_subgraphs.utilities.Util;
+import grami_directed_subgraphs.CSP.ConstraintGraph;
+import grami_directed_subgraphs.CSP.DFSSearch;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.decomposer.Decomposer;
+import grami_directed_subgraphs.search.SearchLatticeNode;
+import grami_directed_subgraphs.utilities.DfscodesCache;
+import grami_directed_subgraphs.utilities.Settings;
+import grami_directed_subgraphs.utilities.Util;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -45,7 +45,7 @@ import java.util.Map.Entry;
  */
 public class DFSCode<NodeType, EdgeType> extends
 		SearchLatticeNode<NodeType, EdgeType> implements
-		Comparable<DFSCode<NodeType, EdgeType>>, Generic<NodeType, EdgeType>,
+        Comparable<DFSCode<NodeType, EdgeType>>, Generic<NodeType, EdgeType>,
 		Canonizable, Frequented {
 
 	/**
@@ -111,7 +111,7 @@ public class DFSCode<NodeType, EdgeType> extends
 		this.threadIdx = code.threadIdx;
 	}
 
-	public DFSCode(ArrayList<Integer> sortedFreqLabels,Graph singleGraph, HashMap<Integer, HashSet<Integer>> nonCands) 
+	public DFSCode(ArrayList<Integer> sortedFreqLabels, Graph singleGraph, HashMap<Integer, HashSet<Integer>> nonCands)
 	{
 		this.sortedFreqLabels=sortedFreqLabels;
 		this.singleGraph=singleGraph;
@@ -241,7 +241,7 @@ public class DFSCode<NodeType, EdgeType> extends
 		}
 		int max=-1;
 		
-		for (Iterator<Entry<Integer, Integer>> iterator = labelCounter.entrySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Entry<Integer, Integer>> iterator = labelCounter.entrySet().iterator(); iterator.hasNext();)
 		{
 			Entry<Integer, Integer> entry = iterator.next();
 			if(max<entry.getValue())
@@ -354,7 +354,7 @@ public class DFSCode<NodeType, EdgeType> extends
 					{
 						HashMap<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> edgeRemoved= maps.get(i);
 						
-						for (Iterator<Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();) 
+						for (Iterator<Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();)
 						{
 							Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> removedEdgeEntry = iterator.next();
 							HPListGraph<NodeType, EdgeType> listGraph= removedEdgeEntry.getKey();
@@ -362,7 +362,7 @@ public class DFSCode<NodeType, EdgeType> extends
 							if(DfscodesCache.cache.containsKey(key))
 							{
 								ArrayList<Integer> graphMappings=removedEdgeEntry.getValue();
-								HashMap<Integer, HashSet<Integer>>  nodeNonCandidates = DfscodesCache.cache.get(key); //node ~ noncandidates
+								HashMap<Integer, HashSet<Integer>> nodeNonCandidates = DfscodesCache.cache.get(key); //node ~ noncandidates
 								
 								for (int j = 0; j < listGraph.getNodeCount(); j++) 
 								{
@@ -420,7 +420,7 @@ public class DFSCode<NodeType, EdgeType> extends
 					{
 						HashMap<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> edgeRemoved= maps.get(i);
 						
-						for (Iterator<Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();) 
+						for (Iterator<Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>>> iterator = edgeRemoved.entrySet().iterator(); iterator.hasNext();)
 						{
 							Entry<HPListGraph<NodeType, EdgeType>, ArrayList<Integer>> removedEdgeEntry = iterator.next();
 							HPListGraph<NodeType, EdgeType> listGraph= removedEdgeEntry.getKey(); // each graph candidate
@@ -429,7 +429,7 @@ public class DFSCode<NodeType, EdgeType> extends
 							
 							if(DfscodesCache.cache.containsKey(key))
 							{
-								HashMap<Integer, HashSet<Integer>>  nodeNonCandidates = DfscodesCache.cache.get(key); //node ~ noncandidates
+								HashMap<Integer, HashSet<Integer>> nodeNonCandidates = DfscodesCache.cache.get(key); //node ~ noncandidates
 																
 								for (int j = 0; j < listGraph.getNodeCount(); j++) 
 								{

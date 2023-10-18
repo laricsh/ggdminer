@@ -1,12 +1,12 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import main.java.ggdSearch.AttributeSelection;
-import main.java.grami_directed_subgraphs.dataStructures.Graph;
-import main.java.preProcess.GraphSampling;
+import ggdSearch.AttributeSelection;
+import grami_directed_subgraphs.dataStructures.Graph;
+import preProcess.GraphSampling;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class PropertyGraph {
     private List<AttributePair> setToCompare;
     private HashMap<Integer, String> labelCodes;
     private HashMap<String, Integer> codeLabels;
-    private HashMap<String, Set<String>> setToVerify; //TODO ---> READ THIS FROM JSON FILE?
+    private HashMap<String, Set<String>> setToVerify;
     private boolean isSample;
 
 
@@ -40,7 +40,7 @@ public class PropertyGraph {
     public synchronized static PropertyGraph init(GraphConfiguration config, GGDMinerConfiguration config2) throws Exception {
         if (propertyGraph != null)
         {
-            throw new AssertionError("You already initialized property graph");
+            throw new AssertionError("You already initialized me");
         }
         propertyGraph = new PropertyGraph(config, config2);
         return propertyGraph;
@@ -49,7 +49,7 @@ public class PropertyGraph {
     public synchronized static PropertyGraph initSample(GraphConfiguration config, GGDMinerConfiguration config2) throws Exception {
         if (propertyGraph != null)
         {
-            throw new AssertionError("You already initialized Sample");
+            throw new AssertionError("You already initialized me");
         }
         propertyGraph = new PropertyGraph(config, config2, true);
         return propertyGraph;
@@ -61,6 +61,8 @@ public class PropertyGraph {
         getGraph().loadFromFile_Ehab(this.config.getConnectionPath());
         setSample(false);
         setLabelCodes(config2.labelCode);
+        System.out.println(this.getLabelCodes());
+        System.out.println(this.codeLabels);
         getGraph().printFreqNodes();
         getGraph().setShortestPaths_1hop();
         readVertices();
@@ -79,7 +81,7 @@ public class PropertyGraph {
         this.getGraph().loadFromListSample(AllNodeIds, gs.getAllSampleEdges());
         getGraph().setShortestPaths_1hop();
         setVerticesFromSampleId(tmp.getVerticesProperties_Id(), AllNodeIds);
-        setEdgesFromSampleId(tmp.edgesProperties_Id, tmp.getFromIdEdges(), tmp.getToIdEdges(), gs.getAllSampleEdges());
+        setEdgesFromSampleId(tmp.edgesProperties_Id, tmp.getFromIdEdges(), tmp.getToIdEdges(), gs.getAllSampleEdges());//setEdgesFromSample(copyPg.getEdgesProperties(), AllSampleEdges);
         this.setSample(true);
         //set pg
     }
@@ -189,7 +191,7 @@ public class PropertyGraph {
             List<HashMap<String, String>> vertex = objectMapper.readValue(file, new TypeReference<List<HashMap<String, String>>>(){});
             HashMap<String, HashMap<String, String>> v_new = new HashMap<>();
             for(HashMap<String, String> v: vertex){
-                String id = v.get("id");
+                String id = v.get("id").toString();
                 v_new.put(id, v);
             }
             vertexMap_Id.put(label, v_new);
@@ -199,7 +201,7 @@ public class PropertyGraph {
 
     public HashMap<String, String> getNode(String id, String label){
         try{
-           return this.getVerticesProperties_Id().get(label).get(id);
+            return this.getVerticesProperties_Id().get(label).get(id);
         }catch (Exception e){
             return null;
         }
@@ -208,6 +210,22 @@ public class PropertyGraph {
     public HashMap<String, String> getEdge(String id, String label){
         try{
             return this.getEdgesProperties_Id().get(label).get(id);
+        }catch (Exception e){
+            return null;
+        }
+    }
+
+    public Set<String> getNodeIds(String label){
+        try{
+            return this.verticesProperties_Id.get(label).keySet();
+        }catch (Exception e){
+            return null;
+        }
+    }
+
+    public Set<String> getEdgeIds(String label){
+        try{
+            return this.edgesProperties_Id.get(label).keySet();
         }catch (Exception e){
             return null;
         }
@@ -328,7 +346,6 @@ public class PropertyGraph {
     public HashMap<Tuple<String, String>, List<HashMap<String, String>>> findEdges_V2(List<String> fromids, List<String> toids, int edgeLabel, int labelA, int labelB, Integer size) {
         HashMap<Tuple<String,String>, List<HashMap<String,String>>> edges = new HashMap<>();
         String label = getLabelCodes().get(edgeLabel);
-        //List<HashMap<String, String>> edgeTable = getEdgesProperties().get(labelCodes.get(edgeLabel));
         int sizeAnswer = 0;
         if(toids==null){
             Set<String> fromIds_graph = this.getFromIdEdges().get(label).keySet();
@@ -444,9 +461,11 @@ public class PropertyGraph {
         this.setFromIdEdges(fromIdEdges);
         this.setToIdEdges(toIdEdges);
         this.setEdgesProperties_Id(edgeMap_id);
+        // this.setEdgesProperties(edgeMap);
     }
 
     public void preProcessStep(String algorithm){
+        //process to identify pairs of attributes that are possibly correlated
         AttributeSelection attrSel = new AttributeSelection();
         List<AttributePair> toCompare = attrSel.preprocessPairs(algorithm);
         this.setSetToCompare(toCompare);
@@ -467,13 +486,13 @@ public class PropertyGraph {
     public void removeAttrToCompare(String attr1, String attr2, String label1, String label2){
         AttributePair pairToRemove = new AttributePair();
         for(AttributePair pair : this.setToCompare){
-           if(pair.attributeName1.equals(attr1) && pair.attributeName2.equals(attr2) && pair.label1.equals(label1) && pair.label2.equals(label2)){
-               pairToRemove = pair;
-               break;
-           }else if(pair.attributeName1.equals(attr2) && pair.attributeName2.equals(attr1) && pair.label1.equals(label2) && pair.label2.equals(label1)){
-               pairToRemove = pair;
-               break;
-           }
+            if(pair.attributeName1.equals(attr1) && pair.attributeName2.equals(attr2) && pair.label1.equals(label1) && pair.label2.equals(label2)){
+                pairToRemove = pair;
+                break;
+            }else if(pair.attributeName1.equals(attr2) && pair.attributeName2.equals(attr1) && pair.label1.equals(label2) && pair.label2.equals(label1)){
+                pairToRemove = pair;
+                break;
+            }
         }
         this.setToCompare.remove(pairToRemove);
     }
@@ -483,6 +502,7 @@ public class PropertyGraph {
             this.setToVerify.get(label).remove(attr1);
         }
     }
+
 
     public HashMap<String, HashMap<String, HashMap<String, String>>> getVerticesProperties_Id() {
         return verticesProperties_Id;

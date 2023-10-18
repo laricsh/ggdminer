@@ -1,4 +1,4 @@
-package main.java.GGD;
+package ggdBase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -44,6 +44,19 @@ public class Constraint {
         this.datatype = c.datatype;
         this.maxInterval = c.maxInterval;
         this.minInterval = c.minInterval;
+    }
+
+    public boolean hasDifferentThreshold(Constraint that){
+        return Objects.equals(distance, that.distance) &&
+                Objects.equals(var1, that.var1) &&
+                Objects.equals(var2, that.var2) &&
+                Objects.equals(attr1, that.attr1) &&
+                Objects.equals(attr2, that.attr2) &&
+                Objects.equals(operator, that.operator) &&
+                Objects.equals(Label1, that.Label1) &&
+                Objects.equals(Label2, that.Label2) &&
+                Objects.equals(datatype, that.datatype) &&
+                !Objects.equals(threshold, that.threshold);
     }
 
     @Override

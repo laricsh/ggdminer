@@ -1,15 +1,15 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.Constraint;
-import main.java.GGD.GGD;
-import main.java.GGD.GraphPattern;
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.minerDataStructures.DifferentialConstraint;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
-import main.java.minerUtils.DistanceFunctions;
+import ggdBase.*;
+import minerDataStructures.DifferentialConstraint;
+import minerDataStructures.Embedding;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
+import minerDataStructures.answergraph.AGEdge;
+import minerDataStructures.answergraph.AGVertex;
+import minerDataStructures.answergraph.AnswerGraph;
+import minerDataStructures.nngraph.NNGraph;
+import minerUtils.DistanceFunctions;
 
 import java.io.IOException;
 import java.util.*;
@@ -24,13 +24,23 @@ public abstract class ExtractionMethod<NodeType, EdgeType> {
 
     public abstract Set<GGD<NodeType, EdgeType>> extractGGDs() throws IOException, CloneNotSupportedException;
 
+    public abstract Set<GGD<NodeType, EdgeType>> extractGGDs_NoAG() throws IOException, CloneNotSupportedException;
+
+    public abstract Set<GraphPattern<NodeType, EdgeType>> getNodes();
+
+    public abstract AnswerGraph<NodeType,EdgeType> getNodeAnswerGraph(GraphPattern<NodeType, EdgeType> gp);
+
+    public abstract NNGraph<GGDLatticeNode<NodeType, EdgeType>> getNNGraph();
+
+    // public abstract Double calculateDiversity(GGDLatticeNode<NodeType, EdgeType> newNode);
+
     public Double similarity(GGDLatticeNode<NodeType, EdgeType> node1, GGDLatticeNode<NodeType, EdgeType> node2) {
         String node1DFSCode = node1.DFSCodeString();
         String node2DFSCode = node2.DFSCodeString();
         System.out.println("Node 1 DFS CODES" + node1DFSCode);
         System.out.println("Node 2 DFS CODES" + node2DFSCode);
         double DFSCodeSim = DFSCodesSimilarity(node1.DFSCodeString(), node2.DFSCodeString());
-        double ConstraintSim = 0.0;
+        double ConstraintSim = 0.0;//DifferentialConstraintDistance(node1.getConstraintSet(), node2.getConstraintSet(), node1, node2);
         double EmbeddingsSim = EmbeddingsIntersection(node1.query.embeddings, node2.query.embeddings);
         return (DFSCodeSim + ConstraintSim + EmbeddingsSim)/3;
     }
@@ -108,24 +118,24 @@ public abstract class ExtractionMethod<NodeType, EdgeType> {
         return sum/count;
     }
 
-    public GGD buildGGD(GGDLatticeNode<NodeType, EdgeType> source, GGDLatticeNode<NodeType,EdgeType> target, List<Tuple<String, String>> commonVariables, Double confidence) {
+    public GGD buildGGD(GGDLatticeNode<NodeType, EdgeType> source, GGDLatticeNode<NodeType,EdgeType> target, List<Tuple<String, String>> commonVariables, Double confidence) throws CloneNotSupportedException {
         HashMap<Integer, String> labelCodes = PropertyGraph.getInstance().getLabelCodes();
         List<Embedding> sourceEmbeddings = source.query.embeddings;
-        Integer numberMatches_source = source.query.embeddings.size();
-        Integer numberMatches_target = target.query.embeddings.size();
-        //if(numberMatches_target > numberMatches_source) return null;
+        Integer numberMatches_source = source.query.getAnswergraph().getNumberOfEmbeddings();
+        Integer numberMatches_target = target.query.getAnswergraph().getNumberOfEmbeddings();
+        System.out.println("Number of matches in the target::" + numberMatches_target);
         List<GraphPattern<NodeType, EdgeType>> sourcePattern = new ArrayList<GraphPattern<NodeType, EdgeType>>();
         GraphPattern<NodeType,EdgeType> sourcePattern_ = new GraphPattern<NodeType, EdgeType>();
         sourcePattern_.setName(source.pattern.getName());
         for(VerticesPattern<NodeType, NodeType> vertices: source.pattern.getVertices()){
-            NodeType nodeLabel = (NodeType) vertices.nodeLabel.toString();//getLabelFromCode(vertices.nodeLabel.toString(), labelCodes);
+            NodeType nodeLabel = (NodeType) vertices.nodeLabel.toString();
             VerticesPattern<NodeType, NodeType> vPattern = new VerticesPattern<NodeType, NodeType>(nodeLabel, vertices.nodeVariable);
             sourcePattern_.addVertex(vPattern);
         }
         for(EdgesPattern<NodeType, EdgeType> edges : source.pattern.getEdges()){
-            NodeType sourceLabel = (NodeType) edges.sourceLabel.toString();//getLabelFromCode(edges.sourceLabel.toString(), labelCodes);
-            NodeType targetLabel = (NodeType) edges.targetLabel.toString();//getLabelFromCode(edges.targetLabel.toString(), labelCodes);
-            EdgeType label = (EdgeType) edges.label.toString();//getLabelFromCode(edges.label.toString(), labelCodes);
+            NodeType sourceLabel = (NodeType) edges.sourceLabel.toString();
+            NodeType targetLabel = (NodeType) edges.targetLabel.toString();
+            EdgeType label = (EdgeType) edges.label.toString();
             EdgesPattern<NodeType, EdgeType> newEdge = new EdgesPattern<NodeType, EdgeType>(label, edges.variable, sourceLabel, edges.sourceVariable, targetLabel, edges.targetVariable);
             sourcePattern_.addEdge(newEdge);
         }
@@ -134,38 +144,48 @@ public abstract class ExtractionMethod<NodeType, EdgeType> {
         sourceCons.addAll(source.getConstraints().constraints);
         List<Constraint> targetCons = new ArrayList<Constraint>();
         GraphPattern<NodeType, EdgeType> targetPattern_ = new GraphPattern<NodeType, EdgeType>();
+        AnswerGraph<NodeType, EdgeType> agTarget = new AnswerGraph<NodeType, EdgeType>(target.pattern, target.query.getAnswergraph().nodes, target.query.getAnswergraph().edges);
         for(VerticesPattern<NodeType, NodeType> vertices: target.pattern.getVertices()){
             NodeType nodeVariable;
-            NodeType nodeLabel = (NodeType) vertices.nodeLabel;//getLabelFromCode(vertices.nodeLabel.toString(), labelCodes);
+            NodeType nodeLabel = (NodeType) vertices.nodeLabel;
             nodeVariable = commonContains(vertices.nodeVariable, commonVariables);
             VerticesPattern<NodeType, NodeType> vPattern = new VerticesPattern<NodeType, NodeType>(nodeLabel, nodeVariable);
             targetPattern_.addVertex(vPattern);
+            if(!agTarget.nodes.containsKey(nodeVariable.toString())){
+                AGVertex<NodeType,EdgeType> newNode = agTarget.nodes.get(vertices.nodeVariable.toString());
+                agTarget.nodes.put(nodeVariable.toString(), newNode);
+                agTarget.nodes.remove(vertices.nodeVariable);
+            }
         }
         for(EdgesPattern<NodeType, EdgeType> edges : target.pattern.getEdges()){
             NodeType sourceVariable = commonContains(edges.sourceVariable, commonVariables);
             NodeType targetVariable = commonContains(edges.targetVariable, commonVariables);
             EdgeType var = commonContainsEdges(edges.variable, commonVariables);
-            NodeType sourceLabel = (NodeType) edges.sourceLabel.toString();//getLabelFromCode(edges.sourceLabel.toString(), labelCodes);
-            NodeType targetLabel = (NodeType) edges.targetLabel.toString();//getLabelFromCode(edges.targetLabel.toString(), labelCodes);
-            EdgeType label = (EdgeType) edges.label.toString();//getLabelFromCode(edges.label.toString(), labelCodes);
+            NodeType sourceLabel = (NodeType) edges.sourceLabel.toString();
+            NodeType targetLabel = (NodeType) edges.targetLabel.toString();
+            EdgeType label = (EdgeType) edges.label.toString();
             EdgesPattern<NodeType, EdgeType> newEdge = new EdgesPattern<NodeType, EdgeType>(label, var, sourceLabel, sourceVariable, targetLabel, targetVariable);
             targetPattern_.addEdge(newEdge);
+            if(!agTarget.edges.containsKey(var.toString())){
+                AGEdge<NodeType, EdgeType> agEdge = agTarget.edges.get(edges.variable);
+                agTarget.edges.put(var.toString(), agEdge);
+                agTarget.edges.remove(edges.variable);
+            }
         }
-        //substitute constraints
         if(!target.getConstraints().constraints.isEmpty() || target.getConstraints().constraints == null) {
-
             for (Constraint c1 : target.getConstraints().constraints) {
                 Constraint c = new Constraint(c1);
                 c.setVar1(commonContains(c1.getVar1(), commonVariables));
                 c.setVar2(commonContains(c1.getVar2(), commonVariables));
                 targetCons.add(c);
             }
+
         }
         List<GraphPattern<NodeType, EdgeType>> targetPattern = new ArrayList<GraphPattern<NodeType, EdgeType>>();
         targetPattern_.setName(sourcePattern.get(0).getName());
         targetPattern.add(targetPattern_);
         if(sourcePattern.equals(targetPattern) && targetCons.isEmpty()) return null;
-        return new GGD<NodeType, EdgeType>(sourcePattern, sourceCons, targetPattern, targetCons, confidence, numberMatches_source, numberMatches_target, sourceEmbeddings, source.query.getAnswergraph());
+        return new GGD<NodeType, EdgeType>(sourcePattern, sourceCons, targetPattern, targetCons, confidence, numberMatches_source, numberMatches_target, sourceEmbeddings, source.query.getAnswergraph(),target.query.getAnswergraph(), commonVariables);
     }
 
     public NodeType commonContains(NodeType variableY, List<Tuple<String,String>> commonVariables){

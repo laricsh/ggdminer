@@ -1,10 +1,6 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.security.InvalidParameterException;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,7 +12,7 @@ import java.util.logging.Logger;
  * @author Thibault Debatty
  * @param <T> the actual type of the nodes
  */
-public abstract class GraphBuilder<T> extends NNGraph<T> implements Cloneable, Serializable  {
+public abstract class GraphBuilder<T> extends NNGraph<T> implements Cloneable, Serializable {
 
     protected int k = 10;
     protected SimilarityInterface<T> similarity;

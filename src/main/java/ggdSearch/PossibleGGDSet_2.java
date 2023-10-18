@@ -1,4 +1,4 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
 import java.util.Set;
 import java.util.TreeSet;

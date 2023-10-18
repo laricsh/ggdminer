@@ -1,14 +1,12 @@
-package main.java.minerDataStructures.similarityMeasures;
+package ggdSearch;
 
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.ggdSearch.GGDLatticeNode;
-import main.java.ggdSearch.GGDSearcher;
-import main.java.minerDataStructures.CommonSubparts;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.Tuple;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
-import main.java.minerDataStructures.EmbeddingId;
+import ggdBase.EdgesPattern;
+import ggdBase.VerticesPattern;
+import minerDataStructures.CommonSubparts;
+import minerDataStructures.Embedding;
+import minerDataStructures.EmbeddingId;
+import minerDataStructures.Tuple;
+import minerDataStructures.answergraph.AnswerGraph;
 
 import java.util.*;
 
@@ -69,7 +67,55 @@ public class ExtractionMeasures<NodeType, EdgeType> {
                 aToBMap.put(commonVariable.x, commonVariable.y);
             }
             AnswerGraph<NodeType, EdgeType> validatedAG = nodeA.query.getAnswergraph().filter_AGV3(nodeB.query.getAnswergraph(), commonSubgraph);
-            //AnswerGraph<NodeType, EdgeType> validatedAG = nodeB.query.getAnswergraph().filter_AGV2(nodeA.query.getAnswergraph(), commonSubgraph);
+            System.out.println("answer graph has been filtered with mapping variables");
+            if(validatedAG.getNodesSize() == 0 ){
+                System.out.println("This mapping does not have common nodes or edges!");
+                continue;
+            }
+            if(nodeA.query.gp.getEdges().size() > 0 && validatedAG.getEdgesSize() == 0){
+                System.out.println("This mapping does not have common nodes or edges!");
+                continue;
+            }
+            int support_common = 0;
+            int validated_size = validatedAG.getNumberOfEmbeddings();
+            double confidenceGGD = Double.valueOf(validated_size)/ Double.valueOf(totalSize_Embeddings);
+            System.out.println("Confidence:::" + confidenceGGD + " total size of embeddings:" + totalSize_Embeddings + " validated size" + validated_size);
+            if (confidenceGGD >= this.threshold) {
+                    mapsSubgraphs.add(new CommonSubparts(confidenceGGD, commonSubgraph));
+            }
+        }
+        System.out.println("Mapsubgraphs::" + mapsSubgraphs.size());
+        if(mapsSubgraphs.size() > GGDSearcher.maxMappings){
+            Collections.sort(mapsSubgraphs);
+            return mapsSubgraphs.subList(0, GGDSearcher.maxMappings-1);
+        }else return mapsSubgraphs;
+    }
+
+
+    public List<CommonSubparts> GGDConfidence_defact(GGDLatticeNode<NodeType, EdgeType> nodeA, GGDLatticeNode<NodeType, EdgeType> nodeB) throws CloneNotSupportedException {
+        System.out.println("Defactorization - confidence checking");
+        List<CommonSubparts> mapsSubgraphs = new LinkedList<>();
+        if(nodeB.equals(nodeA)) return mapsSubgraphs; //forcing to return 0 so it does not pair two equal nodes as an association rule
+        Set<List<Tuple<String, String>>> commonSubgraphs = commonParts(nodeA, nodeB);
+        System.out.println("Mappings: "+ commonSubgraphs);
+        if(commonSubgraphs.isEmpty()) return mapsSubgraphs;
+        //int totalSize_Embeddings = nodeA.query.getAnswergraph().getNumberOfEmbeddings();
+        List<EmbeddingId> allEmbeddings = nodeA.defactorize(nodeA.query.gp.getAllVariables());
+        int totalSize_Embeddings = allEmbeddings.size();
+        for(List<Tuple<String, String>> commonSubgraph : commonSubgraphs){
+            if(commonSubgraph.size() == 1 && nodeB.pattern.getVertices().size() ==1 && nodeB.pattern.getEdges().size() == 0){
+                continue;
+            }
+            List<String> varsA = new ArrayList<>();
+            List<String> varsB = new ArrayList<>();
+            boolean bool = false;
+            Map<String, String> aToBMap = new HashMap<>();
+            for (Tuple<String, String> commonVariable : commonSubgraph) {
+                varsA.add(commonVariable.x);
+                varsB.add(commonVariable.y);
+                aToBMap.put(commonVariable.x, commonVariable.y);
+            }
+            AnswerGraph<NodeType, EdgeType> validatedAG = nodeB.query.getAnswergraph().filter_AGV2(nodeA.query.getAnswergraph(), commonSubgraph);
             System.out.println("answer graph has been filtered with mapping variables");
             if(validatedAG.getNodesSize() == 0 ){
                 System.out.println("This mapping does not have common nodes or edges!");
@@ -81,13 +127,26 @@ public class ExtractionMeasures<NodeType, EdgeType> {
             }
             GGDLatticeNode<NodeType, EdgeType> tmpNode = new GGDLatticeNode<>(nodeB);
             tmpNode.query.setAnswergraph(validatedAG);
+            List<List<String>> allEmbeddings_A = nodeA.getAllEmbeddings_AG(varsA);
+            List<List<String>> allEmbeddings_B = tmpNode.getAllEmbeddings_AG(varsB);
+            System.out.println("Embeddings done!");
             int support_common = 0;
-            int validated_size = tmpNode.query.getAnswergraph().getNumberOfEmbeddings();
-            double confidenceGGD = Double.valueOf(totalSize_Embeddings)/Double.valueOf(validated_size);
-            //double confidenceGGD = Double.valueOf(support_common)/ Double.valueOf(allEmbeddings_A.size());
-            //System.out.println("Confidence GGD:::" + confidenceGGD);
+            for(List<String> embA : allEmbeddings_A){
+                for(List<String> embB : allEmbeddings_B){
+                    if(embA.containsAll(embB)){
+                        support_common = support_common + 1;
+                        break;
+                    }
+                }
+            }
+            for(EmbeddingId embA : allEmbeddings){
+               if(tmpNode.query.hasEmbedding(embA, aToBMap)){ //these are embeddings of
+                   support_common = support_common + 1;
+               }
+            }
+            double confidenceGGD = Double.valueOf(support_common) / Double.valueOf(totalSize_Embeddings);
             if (confidenceGGD >= this.threshold) {
-                    mapsSubgraphs.add(new CommonSubparts(confidenceGGD, commonSubgraph));
+                mapsSubgraphs.add(new CommonSubparts(confidenceGGD, commonSubgraph));
             }
         }
         if(mapsSubgraphs.size() > GGDSearcher.maxMappings){
@@ -96,10 +155,9 @@ public class ExtractionMeasures<NodeType, EdgeType> {
         }else return mapsSubgraphs;
     }
 
-
     List<Tuple<String, String>> runDFSUtil(Set<Tuple<String, String>> dfsR, VerticesPattern<NodeType, NodeType> va, VerticesPattern<NodeType, NodeType> vb, GGDLatticeNode<NodeType, EdgeType> nodeA, GGDLatticeNode<NodeType, EdgeType> nodeB, int count, int maxCount){
         if(count == maxCount){
-            List<Tuple<String,String>> result = new LinkedList<>();
+            List<Tuple<String, String>> result = new LinkedList<>();
             result.addAll(dfsR);
             return result;
         }
@@ -147,7 +205,7 @@ public class ExtractionMeasures<NodeType, EdgeType> {
             }
 
         }
-        List<Tuple<String,String>> result = new LinkedList<>();
+        List<Tuple<String, String>> result = new LinkedList<>();
         result.addAll(dfsR);
         return result;
         //return dfsR;
@@ -167,6 +225,45 @@ public class ExtractionMeasures<NodeType, EdgeType> {
         return true;
     }
 
+    public boolean hasMirror(Set<List<Tuple<String, String>>> set, List<Tuple<String, String>> new_mapping, GGDLatticeNode<NodeType, EdgeType> nodeA, GGDLatticeNode<NodeType, EdgeType> nodeB){
+        boolean mirror = false;
+        if(nodeB.pattern.getVertices().size() < 2){
+            return false;
+        }
+        for(List<Tuple<String, String>> mapping : set){
+            if(mapping.size() == new_mapping.size() && nodeA.getConstraints().constraints.isEmpty() && nodeB.getConstraints().constraints.isEmpty()){
+                for(Tuple<String, String> tuple : new_mapping){
+                    for(Tuple<String, String> map: mapping){
+                        if(tuple.x.equals(map.x) && !tuple.y.equals(map.y)){
+                            if(nodeB.pattern.getVerticesVariables().contains(tuple.y)){
+                                Set<EdgesPattern<NodeType, EdgeType>> outgoing = nodeB.pattern.getEdgesOutgoing(tuple.y);
+                                Set<EdgesPattern<NodeType, EdgeType>> outgoingBefore = nodeB.pattern.getEdgesOutgoing(map.y);
+                                if(!outgoing.isEmpty() && !outgoingBefore.isEmpty() && outgoing.size() == outgoingBefore.size()){
+                                    if(outgoing.iterator().next().targetLabel.equals(outgoingBefore.iterator().next().targetLabel)){
+                                        mirror = true;
+                                    }
+                                }else if (outgoing.isEmpty() && outgoing.isEmpty()){
+                                    Set<EdgesPattern<NodeType, EdgeType>> ingoingBefore = nodeB.pattern.getEdgesIngoing(map.y);
+                                    Set<EdgesPattern<NodeType, EdgeType>> ingoing = nodeB.pattern.getEdgesIngoing(tuple.y);
+                                    if(!ingoing.isEmpty() && !ingoingBefore.isEmpty() && ingoing.size() == ingoingBefore.size()){
+                                        if(ingoing.iterator().next().sourceLabel.equals(ingoingBefore.iterator().next().sourceLabel)){
+                                            mirror = true;
+                                        }
+                                    }if(ingoing.isEmpty() && ingoingBefore.isEmpty()){
+                                        mirror = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if(mirror) return true;
+            }
+        }
+        return  mirror;
+    }
+
+
 
     public Set<List<Tuple<String, String>>> commonParts(GGDLatticeNode<NodeType, EdgeType> nodeA, GGDLatticeNode<NodeType, EdgeType> nodeB){
         Set<List<Tuple<String, String>>> set = new HashSet<>();
@@ -176,7 +273,9 @@ public class ExtractionMeasures<NodeType, EdgeType> {
                 if(firstNode.nodeLabel.toString().equals(vB.nodeLabel.toString())){
                     List<Tuple<String, String>> list = new LinkedList<>();
                     list.add(new Tuple<>(firstNode.nodeVariable.toString(), vB.nodeVariable.toString()));
-                    set.add(list);
+                    if(!hasMirror(set, list, nodeA, nodeB)){
+                        set.add(list);
+                    }
                 }
             }
             return set;
@@ -190,50 +289,16 @@ public class ExtractionMeasures<NodeType, EdgeType> {
                         Set<Tuple<String, String>> dfsR = new HashSet<>();
                         Tuple<String, String> t1 = new Tuple<>(vA.nodeVariable.toString(), vB.nodeVariable.toString());
                         dfsR.add(t1);
-                        List<Tuple<String, String>> bfsResult = runDFSUtil(dfsR, vA, vB, nodeA, nodeB, 0, i);
-                        Collections.sort(bfsResult);
-                        set.add(bfsResult);
+                        List<Tuple<String, String>> dfsResult = runDFSUtil(dfsR, vA, vB, nodeA, nodeB, 0, i);
+                        Collections.sort(dfsResult);
+                        if(!hasMirror(set, dfsResult, nodeA, nodeB)){
+                            set.add(dfsResult);
+                        }
                     }
                 }
             }
         }
         return set;
-    }
-
-
-    public List<List<String>> getAllEmbeddings(List<String> vars, GGDLatticeNode<NodeType, EdgeType> node){
-        List<List<String>> lists = new ArrayList<>();
-        if(node.query.embeddings.size() == 0) return lists; //HERE CHECK
-        //if(node.pattern.getVertices().size() == 1 && node.pattern.getVertices().iterator().next().nodeVariable.toString().equals("1")) return lists;
-        for(Embedding emb : node.query.embeddings){
-            List<String> embIds = new ArrayList<>();
-            for(String variable : vars){
-                if(emb.nodes.containsKey(variable)){
-                    embIds.add(emb.nodes.get(variable).get("id"));
-                }else{
-                    embIds.add(emb.edges.get(variable).get("id"));
-                }
-            }
-            lists.add(embIds);
-        }
-        return lists;
-    }
-
-    public List<List<String>> getAllEmbeddings_AG(List<String> vars, GGDLatticeNode<NodeType, EdgeType> node){
-        List<List<String>> lists = new ArrayList<>();
-        if(node.query.getAnswergraph().getNodesSize() == 0) return lists;
-        for(Embedding emb : node.query.embeddings){
-            List<String> embIds = new ArrayList<>();
-            for(String variable : vars){
-                if(emb.nodes.containsKey(variable)){
-                    embIds.add(emb.nodes.get(variable).get("id"));
-                }else{
-                    embIds.add(emb.edges.get(variable).get("id"));
-                }
-            }
-            lists.add(embIds);
-        }
-        return lists;
     }
 
 

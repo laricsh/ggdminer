@@ -1,15 +1,16 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.DifferentialConstraint.ConstraintDiscoveryStrategy;
-import main.java.DifferentialConstraint.DiscretizationStrategy;
-import main.java.GGD.Constraint;
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.GraphPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanEdge;
-import main.java.minerDataStructures.*;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import ggdBase.Constraint;
+import ggdBase.EdgesPattern;
+import ggdBase.GraphPattern;
+import ggdBase.VerticesPattern;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import minerDataStructures.*;
+import minerDataStructures.answergraph.AGEdge;
+import minerDataStructures.answergraph.AnswerGraph;
 import org.apache.commons.math3.util.CombinatoricsUtils;
+import DifferentialConstraint.ConstraintDiscoveryStrategy;
+import DifferentialConstraint.DiscretizationStrategy;
 
 import java.util.*;
 
@@ -18,6 +19,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
 
     PropertyGraph pg = PropertyGraph.getInstance();
     PatternQuery<NodeType, EdgeType> query;
+    Integer maxCombination = GGDSearcher.maxCombination;
 
     public DifferentialConstraintDiscovery_AG(PatternQuery query){
         this.query = query;
@@ -46,18 +48,29 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
     public List<GGDLatticeNode<NodeType, EdgeType>> discoverAllConstraint_AG(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> edgeExtension) throws CloneNotSupportedException {
         List<GGDLatticeNode<NodeType, EdgeType>> constantConstraint = new LinkedList<>();
         List<GGDLatticeNode<NodeType, EdgeType>> pairConstraint = new LinkedList<>();
+        List<GGDLatticeNode<NodeType, EdgeType>> equalityConstraint = new LinkedList<>();
         List<GGDLatticeNode<NodeType, EdgeType>> allConstraints = new ArrayList<>();
         List<GGDLatticeNode<NodeType, EdgeType>> tmpConstraint = new ArrayList<>();
         if(query.gp.getEdges().size() == 1){
             System.out.println("First lattice node discovery of constraints!!!");
             constantConstraint = discoverConstraintsConstant_AG(node, edgeExtension, true);
+            System.out.println("constant constraint ok!");
             pairConstraint = discoverConstraintPair_AG(node, edgeExtension, true);
+            System.out.println("pair constraint ok!");
+            equalityConstraint = discoverConstraintEquality_AGBasedIso(node, edgeExtension, true);
+            System.out.println("equality constraint ok!");
         }else{
             constantConstraint = discoverConstraintsConstant_AG(node, edgeExtension, false);
+            System.out.println("constant constraint ok!");
             pairConstraint = discoverConstraintPair_AG(node, edgeExtension, false);
+            System.out.println("pair constraint ok!");
+            equalityConstraint = discoverConstraintEquality_AGBasedIso(node, edgeExtension, false);
+            System.out.println("equality constraint ok!");
         }
+        System.out.println("Done with differential constraint discovery!");
         //if constraints are not constant --> check combination
         allConstraints.add(node);
+        allConstraints.addAll(equalityConstraint);
         for(GGDLatticeNode<NodeType, EdgeType> constraint : constantConstraint){
             if(constraint.query.getAnswergraph().getNodesSize().equals(node.query.getAnswergraph().getNodesSize()) && (constraint.query.getAnswergraph().getEdgesSize().equals(node.query.getAnswergraph().getEdgesSize()))){
                 checkRemoveFromComparingSet(constraint.getConstraints().constraints.get(0), node.pattern);
@@ -77,12 +90,134 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
                 tmpConstraint.add(constraint);
             }
         }
+        tmpConstraint.addAll(equalityConstraint);
+        System.out.println("Checking combination of constraints:::");
         List<GGDLatticeNode<NodeType, EdgeType>> combinationCons = combinationOfConstraints_AG(tmpConstraint);//combinationOfConstraints_AG(allConstraints);
+        System.out.println("Done checking!");
         allConstraints.addAll(tmpConstraint);
         allConstraints.addAll(combinationCons);
         System.out.println("Discovered a total of " + allConstraints.size() + " constraints for this extension");
         return allConstraints;
     }
+
+    public List<GGDLatticeNode<NodeType, EdgeType>> discoverConstraintEquality_AGBasedIso(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> edgeExtension, boolean isSingleEdge) throws CloneNotSupportedException {
+        List<GGDLatticeNode<NodeType,EdgeType>> answer = new ArrayList<>();
+        int varA;
+        int varB;
+        if(edgeExtension.getDirection() == 1){
+            varA = edgeExtension.getNodeA();
+            varB = edgeExtension.getNodeB();
+        }else{
+            varA = edgeExtension.getNodeB();
+            varB = edgeExtension.getNodeA();
+        }
+        EdgesPattern<NodeType, EdgeType> e = query.gp.getEdge(varA, varB);
+        AnswerGraph<NodeType, EdgeType> ag = this.query.getAnswergraph();
+        Constraint cons = new Constraint("neq", 0.0, "!=", "", "", "string", 0.0,0.0);
+        cons.setVar1(e.sourceVariable.toString());
+        cons.setVar2(e.targetVariable.toString());
+        cons.setLabel1(e.sourceLabel.toString());
+        cons.setLabel2(e.targetLabel.toString());
+        DifferentialConstraint diff = new DifferentialConstraint();
+        diff.constraints.add(cons);
+        GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(node);
+        newNode.query.setAnswergraph(ag);
+        newNode.setConstraints(diff);
+        answer.add(newNode);
+        return answer;
+    }
+
+
+    public List<GGDLatticeNode<NodeType, EdgeType>> discoverConstraintEquality_AG(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> edgeExtension, boolean isSingleEdge) throws CloneNotSupportedException {
+        List<GGDLatticeNode<NodeType,EdgeType>> answer = new ArrayList<>();
+        int varA;
+        int varB;
+        if(edgeExtension.getDirection() == 1){
+            varA = edgeExtension.getNodeA();
+            varB = edgeExtension.getNodeB();
+        }else{
+            varA = edgeExtension.getNodeB();
+            varB = edgeExtension.getNodeA();
+        }
+        EdgesPattern<NodeType, EdgeType> e = query.gp.getEdge(varA, varB);
+        if(isSingleEdge){
+            if(e.sourceLabel.toString().equals(e.targetLabel)){
+                Set<String> edgeids = new HashSet<>();
+                int count = 0;
+                AGEdge<NodeType, EdgeType> edge = (AGEdge<NodeType, EdgeType>) node.query.getAnswergraph().edges.get(e);
+                DifferentialConstraint diff = new DifferentialConstraint();
+                List<Tuple4<String>> tuples = new ArrayList<>();
+                for(Map.Entry<String, Tuple<String, String>> srcTrgt : edge.edgeSrcTrg.entrySet()){
+                    if(!srcTrgt.getValue().x.equals(srcTrgt.getValue().y)){
+                        count = count + 1;
+                        edgeids.add(srcTrgt.getKey());
+                        diff.tuplesOfThisConstraint.add(new Tuple4<>(srcTrgt.getValue().x, srcTrgt.getValue().x, srcTrgt.getValue().y, srcTrgt.getValue().y));
+                    }
+                }
+                if(count > GGDSearcher.freqThreshold.intValue()){
+                    AnswerGraph<NodeType, EdgeType> ag = this.query.getAnswergraph().filter(edgeids, e.variable.toString());
+                    Constraint cons = new Constraint("neq", 0.0, "!=", "", "", "string", 0.0,0.0);
+                    cons.setVar1(e.sourceVariable.toString());
+                    cons.setVar2(e.targetVariable.toString());
+                    cons.setLabel1(e.sourceLabel.toString());
+                    cons.setLabel2(e.targetLabel.toString());
+                    diff.constraints.add(cons);
+                    GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(node);
+                    newNode.query.setAnswergraph(ag);
+                    newNode.setConstraints(diff);
+                    answer.add(newNode);
+                    return answer;
+                }
+            }
+            else return answer;
+        }else{
+            //no single edge --> check combination of variables only for extension
+            for(VerticesPattern<NodeType, NodeType> v: node.pattern.getVertices()){
+                String var = "";
+                String label = v.nodeLabel.toString();
+                if(v.nodeLabel.equals(e.sourceLabel.toString()) && !v.nodeVariable.toString().equals(e.sourceVariable.toString())){
+                    //check equality
+                    var = e.sourceVariable.toString();
+                }else if(v.nodeLabel.equals(e.targetLabel.toString()) && !v.nodeVariable.toString().equals(e.targetVariable.toString())){
+                    //check equality
+                    var = e.targetVariable.toString();
+                }
+                if(var == ""){
+                    continue;
+                }
+                System.out.println("Start get tuple of neq constraints");
+                List<Tuple4<String>> tuplesOfThisConstraints = this.query.getAnswergraph().getNeqPairs(v.nodeVariable.toString(), var, label);
+                System.out.println("Got all tuples of the neq constraints");
+                if(tuplesOfThisConstraints.size() >= GGDSearcher.freqThreshold.intValue()){
+                    Set<String> idsV1 = new HashSet<>();
+                    Set<String> idsV2 = new HashSet<>();
+                    GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(node);
+                    for (Tuple4<String> tuple : tuplesOfThisConstraints) {
+                        idsV1.add(tuple.v2);
+                        idsV2.add(tuple.v4);
+                    }
+                    AnswerGraph<NodeType, EdgeType> tmpAG = node.query.getAnswergraph();
+                    AnswerGraph<NodeType, EdgeType> newAG = tmpAG.filter_2(idsV1, idsV2, v.nodeVariable.toString(), var);
+                    newNode.query.setAnswergraph(newAG);
+                    Constraint cons = new Constraint("neq", 0.0, "!=", "", "", "string", 0.0,0.0);
+                    cons.setVar1(v.nodeVariable.toString());
+                    cons.setVar2(var);
+                    cons.setLabel1(label);
+                    cons.setLabel2(label);
+                    DifferentialConstraint diff = new DifferentialConstraint();
+                    diff.constraints.add(cons);
+                    newNode.setConstraints(diff);
+                    diff.tuplesOfThisConstraint.addAll(tuplesOfThisConstraints);
+                    System.out.println("Created new inequality constraint: neq(" + v.nodeVariable.toString() + ", " + var + ")");
+                    answer.add(newNode);
+                }
+            }
+            return answer;
+        }
+        return answer;
+    }
+
+
 
     public List<GGDLatticeNode<NodeType, EdgeType>> discoverConstraintsConstant_AG(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> edgeExtension, boolean isSingleEdge) throws CloneNotSupportedException {
         List<GGDLatticeNode<NodeType,EdgeType>> answer = new ArrayList<>();
@@ -106,16 +241,16 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
             if(!this.pg.getSetToVerify().containsKey(codeLabel)) continue;
             Set<String> listOfAttributes = this.pg.getSetToVerify().get(codeLabel);
             if(listOfAttributes == null) return answer;
+            HashMap<String, List<Tuple<String, String>>> attributes = this.query.getAnswergraph().getValuePair_AllAttr(vars[i], listOfAttributes, isSingleEdge);
             for(String attr: listOfAttributes){
                 if(!this.pg.getSetToVerify().get(codeLabel).contains(attr)) continue;
-                List<Tuple<String,String>> list = this.query.getAnswergraph().getValuePairAttribute(vars[i], attr, isSingleEdge);
-                List<DifferentialConstraint> constraints = discoverConstraintsConstant(list, attr, "discretization", codeLabel);
+                List<DifferentialConstraint> constraints = discoverConstraintsConstant(attributes.get(attr), attr, "discretization", codeLabel);
                 for(DifferentialConstraint cons: constraints){
                     cons.constraints.get(0).setVar1(vars[i]);
                     cons.constraints.get(0).setLabel1(labels[i]);
                     Set<String> ids = new HashSet<>();
                     for(Tuple4<String> tuple: cons.tuplesOfThisConstraint){
-                        ids.add(tuple.v1);
+                        ids.add(tuple.v2);
                     }
                     //When filtering is not returning a new answer graph --> reusing reference
                     GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(node);
@@ -130,6 +265,9 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
     }
 
     public List<GGDLatticeNode<NodeType, EdgeType>> discoverConstraintPair_AG(GGDLatticeNode<NodeType, EdgeType> node, GSpanEdge<NodeType, EdgeType> edgeExtension, boolean isSingleEdge) throws CloneNotSupportedException {
+        //System.out.println("new extension level" + edgeExtension.toString());
+        //the edge refers to the last extension of this graph pattern
+        //discover constraints only about the last extension of this graph pattern
         List<GGDLatticeNode<NodeType,EdgeType>> answer = new LinkedList<>();
         int varA;
         int varB;
@@ -141,19 +279,12 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
             varB = edgeExtension.getNodeA();
         }
         EdgesPattern<NodeType, EdgeType> e = query.gp.getEdge(varA, varB);
-        //tring[] labelsExtension = {(String) e.sourceLabel, (String) e.targetLabel, (String) e.label};
-        HashMap<Tuple<String, String>, List<Tuple<String, String>>> possibleLabelsAttributes = computeLabelCombinations(e);
-        List<AttributePair> listAttributesToCompare = selectListOfAttributePairs(possibleLabelsAttributes.keySet());
-        //List<HashMap<String, HashMap<String, String>>> allTables = this.query.getEmbeddingsOfThis(var);
-        for(AttributePair pair: listAttributesToCompare){
-            List<Tuple<String, String>> variable = possibleLabelsAttributes.get(new Tuple<String, String>(pair.label1, pair.label2));
-            if(variable == null) continue;
-            for(Tuple<String, String> vars: variable){
-                //HashMap<Tuple4<String>, HashMap<String, String>> thisTable = getEmbeddingsOfThisPair(pair, vars);
-                List<Tuple4<String>> valuePairs = node.query.getAnswergraph().getValuePair_2(vars.x, vars.y, pair, isSingleEdge);
-                //valuePairs.addAll(thisTable.keySet());
-                List<DifferentialConstraint> constraints = discoverConstraintsForThisPair(valuePairs, pair, "discretization");
-                for(DifferentialConstraint cons: constraints){
+        HashMap<Tuple<String, String>, List<AttributePair>> listAttributesToCompare = getVariableCombinations(e);
+        for(Tuple<String, String> vars : listAttributesToCompare.keySet()){
+            HashMap<AttributePair, TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>>> allValues = node.query.getAnswergraph().getValuePair_AllAttrPair(vars.x, vars.y, listAttributesToCompare.get(vars), isSingleEdge);
+            for(AttributePair pair: allValues.keySet()) {
+                List<DifferentialConstraint> constraints = discoverConstraintsForThisPairDistHash(allValues.get(pair), pair, "discretization");
+                for (DifferentialConstraint cons : constraints) {
                     cons.constraints.get(0).setVar1(vars.x.toString());
                     cons.constraints.get(0).setVar2(vars.y.toString());
                     cons.constraints.get(0).setLabel1(pair.label1.toString());
@@ -161,7 +292,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
                     Set<String> idsV1 = new HashSet<>();
                     Set<String> idsV2 = new HashSet<>();
                     GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(node);
-                    for(Tuple4<String> tuple: cons.tuplesOfThisConstraint){
+                    for (Tuple4<String> tuple : cons.tuplesOfThisConstraint) {
                         idsV1.add(tuple.v2);
                         idsV2.add(tuple.v4);
                     }
@@ -181,10 +312,13 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
     public List<GGDLatticeNode<NodeType, EdgeType>> combinationOfConstraints_AG(List<GGDLatticeNode<NodeType, EdgeType>> allNodes){
         System.out.println("Check combination of constraints " + allNodes.size());
         List<GGDLatticeNode<NodeType, EdgeType>> allNodes_toRemove = new LinkedList<>();
-        int size = GGDSearcher.maxCombination;//allNodes.size();
+        int size = allNodes.size();//GGDSearcher.maxCombination;//allNodes.size();
         List<GGDLatticeNode<NodeType, EdgeType>> finalCombination = new LinkedList<>();
         //combination size
-        for(int i = 2; i <= size; i++){
+        if(maxCombination < 2 || size <= 1){
+            return finalCombination;
+        }
+        for(int i = 2; i <= maxCombination; i++){
             Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(size, i);
             while(iterator.hasNext()){
                 int[] nodesToConsider = iterator.next();
@@ -208,12 +342,11 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
                     }else{
                         tmp = ag.intersect(localAg);
                     }
-                   // AnswerGraph<NodeType, EdgeType> tmp = ag.intersect(localAg);
-                    if(tmp.getEdgesSize() == 0 || tmp.getNodesSize() == 0){
+                    if(tmp.getNodesSize() == 0){
                         System.out.println("empty answer graph!");
                         break;
                     }
-                    if(tmp.estimateEmbeddingsSize() < GGDSearcher.freqThreshold.intValue()){
+                    if(tmp.getNumberOfEmbeddings() < GGDSearcher.freqThreshold.intValue()){
                         break;
                     }
                     ag = tmp;
@@ -222,7 +355,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
                 if(ag.nodes.keySet().size() != this.query.gp.getVertices().size() && ag.edges.keySet().size() != this.query.gp.getEdges().size()){
                     continue;
                 }
-                if(ag.estimateEmbeddingsSize() >= GGDSearcher.freqThreshold.intValue()){
+                if(ag.getNumberOfEmbeddings() >= GGDSearcher.freqThreshold.intValue()){
                     GGDLatticeNode<NodeType, EdgeType> newNode = new GGDLatticeNode<>(initialNode);
                     newNode.setConstraints(allConstraints);
                     newNode.query.setAnswergraph(ag);
@@ -238,7 +371,10 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
     public List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> combinationOfConstraintsSingleNode_AG(String label, List<SingleLabelGGDLatticeNode<NodeType,EdgeType>> singleCons){
         int size = singleCons.size();
         List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> finalAnswer = new LinkedList<>();
-        for(int i = 2; i <= size; i++){
+        if(size <= 1){
+            return finalAnswer;
+        }
+        for(int i = 2; i <= maxCombination; i++){
             Iterator<int[]> iterator = CombinatoricsUtils.combinationsIterator(size, i);
             while(iterator.hasNext()){
                 int[] singleNodesToConsider = iterator.next();
@@ -267,8 +403,10 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
         List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> allSingleNodeLatticeNodes = new LinkedList<>();
         Set<String> attributes = pg.getLabelProperties(node.getLabel());
         List<AttributePair> pairsToCompare = selectAttributePairs(attributes, node.getLabel());
+        HashMap<AttributePair, List<Tuple4<String>>> AllValuePairs = this.query.getAnswergraph().getAllValuePairs("0", pairsToCompare);
         for(AttributePair pair : pairsToCompare){
-            List<Tuple4<String>> valuePairs = this.query.getAnswergraph().getValuePair("0", pair);
+            //List<Tuple4<String>> valuePairs = this.query.getAnswergraph().getValuePair("0", pair);
+            List<Tuple4<String>> valuePairs = AllValuePairs.get(pair);
             List<DifferentialConstraint> constraints = discoverConstraintsForThisPair(valuePairs, pair, "discretization");
             for(DifferentialConstraint cons: constraints){
                 cons.constraints.get(0).setVar1("0");
@@ -288,6 +426,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
         return allSingleNodeLatticeNodes;
     }
 
+
     public List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> discoverConstraintSingleLabelConstant_AG(SingleLabelGGDLatticeNode<NodeType, EdgeType> node){
         List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> allSingleNodeLatticeNodes = new LinkedList<>();
         String codeFromLabel = this.pg.getCodeLabels().get(node.getLabel()).toString();
@@ -298,7 +437,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
         if(listOfAttributes == null) return allSingleNodeLatticeNodes;
         for(String attr: listOfAttributes){
             if(!this.pg.getSetToVerify().get(codeFromLabel).contains(attr)){
-                    continue;
+                continue;
             }
             List<Tuple<String,String>> list = this.query.getAnswergraph().getValuePairAttribute("0", attr, true);
             List<DifferentialConstraint> constraints = discoverConstraintsConstant(list, attr, "discretization", codeFromLabel);
@@ -307,7 +446,7 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
                 cons.constraints.get(0).setLabel1(node.getLabel().toString());
                 Set<Integer> newNodeIds = new HashSet<>();
                 for(Tuple4<String> tuple: cons.tuplesOfThisConstraint){
-                    newNodeIds.add(Integer.valueOf(tuple.v1));
+                    newNodeIds.add(Integer.valueOf(tuple.v2));
                 }
                 SingleLabelGGDLatticeNode<NodeType, EdgeType> nodeLabel = new SingleLabelGGDLatticeNode<>(node.getLabel(), newNodeIds);
                 nodeLabel.setDiffConstraints(cons);
@@ -315,14 +454,21 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
             }
         }
         return allSingleNodeLatticeNodes;
-        }
-
+    }
 
     //call for discovery strategy --> in case of changing strategy, add it here
-    public List<DifferentialConstraint> discoverConstraintsForThisPair(List<Tuple4<String>> valuePairs, AttributePair pair, String strategy){
+    public List<DifferentialConstraint> discoverConstraintsForThisPairDistHash(TreeMap<Double, List<Tuple<Tuple4<String>, Integer>>> distHash, AttributePair pair, String strategy){
         if(strategy.equals("discretization")){
             ConstraintDiscoveryStrategy disc = new DiscretizationStrategy(GGDSearcher.decisionBoundaries, GGDSearcher.freqThreshold.intValue());
-            return disc.discoverConstraints(valuePairs, pair); //pass min threshold and min difference here
+            return disc.discoverConstraintsDistHash(distHash, pair);
+        }else return new ArrayList<DifferentialConstraint>();
+    }
+
+    //call for discovery strategy --> in case of changing strategy, add it here
+    public List<DifferentialConstraint> discoverConstraintsForThisPair(List<Tuple4<String>> here, AttributePair pair, String strategy){
+        if(strategy.equals("discretization")){
+            ConstraintDiscoveryStrategy disc = new DiscretizationStrategy(GGDSearcher.decisionBoundaries, GGDSearcher.freqThreshold.intValue());
+            return disc.discoverConstraints(here, pair);
         }else return new ArrayList<DifferentialConstraint>();
     }
 
@@ -331,7 +477,6 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
         if(strategy.equals("discretization")){
             ConstraintDiscoveryStrategy disc = new DiscretizationStrategy(GGDSearcher.decisionBoundaries, GGDSearcher.freqThreshold.intValue());
             return disc.discoverConstraintsConstant(valuePairs, attr, label);
-            //return disc.discoverConstraints(valuePairs, pair); //pass min threshold and min difference here
         }else return new ArrayList<DifferentialConstraint>();
     }
 
@@ -346,9 +491,8 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
         return attributesSelected;
     }
 
-    public HashMap<Tuple<String, String>, List<Tuple<String, String>>> computeLabelCombinations(EdgesPattern<NodeType, EdgeType> edgeExtension){
-        HashMap<Tuple<String, String>, List<Tuple<String, String>>> map = new HashMap<>();
-        System.out.println(edgeExtension.sourceLabel.toString());
+    public HashMap<Tuple<String, String>, List<AttributePair>> getVariableCombinations(EdgesPattern<NodeType, EdgeType> edgeExtension){
+        HashMap<Tuple<String, String>, List<AttributePair>> map = new HashMap<>();
         Tuple<String, String> source = new Tuple<String, String>(edgeExtension.sourceLabel.toString(),edgeExtension.sourceVariable.toString());
         Tuple<String, String> target = new Tuple<String, String>(edgeExtension.targetLabel.toString(),edgeExtension.targetVariable.toString());
         Tuple<String, String> variable = new Tuple<String, String>(edgeExtension.label.toString(),edgeExtension.variable.toString());
@@ -357,15 +501,10 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
             for(Tuple<String, String> t: edgeLabels){
                 if(!((VerticesPattern) v).nodeVariable.toString().equals(t.y)){
                     String label = ((VerticesPattern) v).nodeLabel.toString();
-                    Tuple<String, String> key = new Tuple<String, String>(label, t.x);
-                    if(map.containsKey(key)){
-                        map.get(key).add(new Tuple<String, String>(((VerticesPattern) v).nodeVariable.toString(), t.y));
-                    }else{
-                        List<Tuple<String, String>> list = new ArrayList<>();
-                        list.add(new Tuple<String, String>(((VerticesPattern) v).nodeVariable.toString(), t.y));
-                        map.put(key, list);
+                    List<AttributePair> pairs = selectListOfAttributePairsOfLabel(t.x, label);
+                    if(pairs.size() > 0){
+                        map.put(new Tuple<String,String>(t.y, ((VerticesPattern) v).nodeVariable.toString()), pairs);
                     }
-
                 }
             }
         }
@@ -373,36 +512,25 @@ public class DifferentialConstraintDiscovery_AG<NodeType, EdgeType> {
             for(Tuple<String, String> t: edgeLabels){
                 if(!((EdgesPattern) e).variable.toString().equals(t.y)){
                     String label = ((EdgesPattern)e).label.toString();
-                    Tuple<String, String> key = new Tuple<String, String>(label, t.x);
-                    if(map.containsKey(key)){
-                        map.get(key).add(new Tuple<String, String>(((EdgesPattern) e).variable.toString(), t.y));
-                    }else{
-                        List<Tuple<String, String>> list = new ArrayList<>();
-                        list.add(new Tuple<String, String>(((EdgesPattern) e).variable.toString(), t.y));
-                        map.put(key, list);
+                    List<AttributePair> pairs = selectListOfAttributePairsOfLabel(t.x, label);
+                    if(pairs.size() > 0){
+                        map.put(new Tuple<String,String>(t.y, ((EdgesPattern) e).variable.toString()), pairs);
                     }
-
                 }
             }
         }
         return map;
     }
 
-    public List<AttributePair> selectListOfAttributePairs(Set<Tuple<String, String>> labels){
+    public List<AttributePair> selectListOfAttributePairsOfLabel(String label1, String label2){
         List<AttributePair> attributesSelected = new ArrayList<>();
         for(AttributePair p: pg.getSetToCompare()){
-            for(Tuple<String, String> l: labels){
-                String x = l.x;//this.pg.labelCodes.get(Integer.valueOf(l.x));
-                String y = l.y;//this.pg.labelCodes.get(Integer.valueOf(l.y));
-                if(x.equalsIgnoreCase(p.label1) && y.equalsIgnoreCase(p.label2)){
-                    attributesSelected.add(p);
-                }
+            if(label1.equalsIgnoreCase(p.label1) && label2.equalsIgnoreCase(p.label2)){
+                attributesSelected.add(p);
             }
         }
         return attributesSelected;
     }
-
-
 
 
 }

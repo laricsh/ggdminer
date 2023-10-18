@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.CSP;
+package grami_directed_subgraphs.CSP;
 
 public class VariablePair 
 {
@@ -25,7 +25,7 @@ public class VariablePair
 	public Variable v2;
 	public double edgeLabel;
 	
-	public VariablePair(Variable v1,Variable v2, double edgeLabel) 
+	public VariablePair(Variable v1, Variable v2, double edgeLabel)
 	{
 		this.v1=v1;
 		this.v2=v2;

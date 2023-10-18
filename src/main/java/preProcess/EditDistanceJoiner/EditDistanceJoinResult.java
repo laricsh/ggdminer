@@ -1,4 +1,4 @@
-package main.java.preProcess.EditDistanceJoiner;
+package preProcess.EditDistanceJoiner;
 
 
 /***

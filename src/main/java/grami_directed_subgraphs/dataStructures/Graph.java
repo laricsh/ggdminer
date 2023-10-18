@@ -17,11 +17,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 
-import main.java.grami_directed_subgraphs.Dijkstra.DijkstraEngine;
-import main.java.minerDataStructures.Tuple;
+import grami_directed_subgraphs.Dijkstra.DijkstraEngine;
+import minerDataStructures.Tuple;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -107,7 +107,7 @@ public class Graph
 		return freqNodesByLabel;
 	}
 
-	public void loadFromListSample(ArrayList<Tuple<Integer,Integer>> sampleNodeIds,HashMap<Integer, ArrayList<Tuple<Integer, Integer>>> sampleEdges){
+	public void loadFromListSample(ArrayList<Tuple<Integer, Integer>> sampleNodeIds, HashMap<Integer, ArrayList<Tuple<Integer, Integer>>> sampleEdges){
 
 		int numberOfNodes=0;
 		for(Tuple<Integer, Integer> nodeIds: sampleNodeIds){
@@ -144,18 +144,18 @@ public class Graph
 		//}
 
 		//prune infrequent edge labels
-		for (Iterator<  Entry< Double,Integer> >  it= this.edgeLabelsWithFreq.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Double, Integer>> it = this.edgeLabelsWithFreq.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Double,Integer > ar =  it.next();
+			Entry<Double, Integer> ar =  it.next();
 			if(ar.getValue().doubleValue()>=freqThreshold)
 			{
 				this.freqEdgeLabels.add(ar.getKey());
 			}
 		}
 
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= nodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = nodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 			if(ar.getValue().size()>=freqThreshold)
 			{
 				sortedFreqLabelsWithFreq.add(new Point(ar.getKey(),ar.getValue().size()));
@@ -174,7 +174,7 @@ public class Graph
 		//prune frequent hashedEdges
 		Vector toBeDeleted = new Vector();
 		Set<String> s = StaticData.hashedEdges.keySet();
-		for (Iterator<String>  it= s.iterator(); it.hasNext();)
+		for (Iterator<String> it = s.iterator(); it.hasNext();)
 		{
 			String sig =  it.next();
 			HashMap[] hm = StaticData.hashedEdges.get(sig);
@@ -245,9 +245,9 @@ public class Graph
 		
 		//now prune the infrequent nodes
 		
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= nodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = nodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 			if(ar.getValue().size()>=freqThreshold)
 			{
 				sortedFreqLabelsWithFreq.add(new Point(ar.getKey(),ar.getValue().size()));
@@ -325,9 +325,9 @@ public class Graph
 		}
 
 		//prune infrequent edge labels
-		for (Iterator<  Entry< Double,Integer> >  it= this.edgeLabelsWithFreq.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Double, Integer>> it = this.edgeLabelsWithFreq.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Double,Integer > ar =  it.next();
+			Entry<Double, Integer> ar =  it.next();
 			if(ar.getValue().doubleValue()>=freqThreshold)
 			{
 				this.freqEdgeLabels.add(ar.getKey());
@@ -335,9 +335,9 @@ public class Graph
 		}
 
 		//now prune the infrequent nodes
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= nodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = nodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 			if(ar.getValue().size()>=freqThreshold)
 			{
 				sortedFreqLabelsWithFreq.add(new Point(ar.getKey(),ar.getValue().size()));
@@ -355,7 +355,7 @@ public class Graph
 		//prune frequent hashedEdges
 		Vector toBeDeleted = new Vector();
 		Set<String> s = StaticData.hashedEdges.keySet();
-		for (Iterator<String>  it= s.iterator(); it.hasNext();)
+		for (Iterator<String> it = s.iterator(); it.hasNext();)
 		{
 			String sig =  it.next();
 			HashMap[] hm = StaticData.hashedEdges.get(sig);
@@ -383,9 +383,9 @@ public class Graph
 
 	public void printFreqNodes()
 	{
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= freqNodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = freqNodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 
 			System.out.println("Freq Label: "+ar.getKey()+" with size: "+ar.getValue().size());
 		}
@@ -394,9 +394,9 @@ public class Graph
 	//1 hop distance for the shortest paths
 	public void setShortestPaths_1hop()
 	{
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= freqNodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = freqNodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 
 			HashMap<Integer,myNode> freqNodes= ar.getValue();
 			int counter=0;
@@ -411,13 +411,13 @@ public class Graph
 
 	public void setShortestPaths(DijkstraEngine dj)
 	{
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= freqNodesByLabel.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer,myNode>>> it = freqNodesByLabel.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer,myNode>> ar =  it.next();
 			
 			HashMap<Integer,myNode> freqNodes= ar.getValue();
 			int counter=0;
-			for (Iterator<myNode> iterator = freqNodes.values().iterator(); iterator.hasNext();) 
+			for (Iterator<myNode> iterator = freqNodes.values().iterator(); iterator.hasNext();)
 			{
 				myNode node =  iterator.next();
 				dj.execute(node.getID(),null);
@@ -456,7 +456,7 @@ public class Graph
 	}
 	public int addEdge(int nodeA, int nodeB, double edgeLabel) 
 	{
-		Integer I = edgeLabelsWithFreq.get(edgeLabel); 
+		Integer I = edgeLabelsWithFreq.get(edgeLabel);
 		if(I==null)
 			edgeLabelsWithFreq.put(edgeLabel, 1);
 		else
@@ -470,7 +470,7 @@ public class Graph
 		
 		hn = labelA+"_"+edgeLabel+"_"+labelB;
 		
-		HashMap<Integer,Integer>[] hm = StaticData.hashedEdges.get(hn); 
+		HashMap<Integer, Integer>[] hm = StaticData.hashedEdges.get(hn);
 		if(hm==null)
 		{
 			hm = new HashMap[2];

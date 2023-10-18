@@ -1,12 +1,12 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.GGD.EdgesPattern;
-import main.java.GGD.GraphPattern;
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.dataStructures.GSpanEdge;
-import main.java.grami_directed_subgraphs.dataStructures.myNode;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import ggdBase.EdgesPattern;
+import ggdBase.GraphPattern;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.dataStructures.GSpanEdge;
+import grami_directed_subgraphs.dataStructures.myNode;
+import grami_directed_subgraphs.utilities.MyPair;
+import minerDataStructures.answergraph.AnswerGraph;
 
 import java.util.*;
 
@@ -269,7 +269,7 @@ public class PatternQuery<NodeType, EdgeType> {
             }
 
         }
-       return returnEdges;
+        return returnEdges;
     }
 
 

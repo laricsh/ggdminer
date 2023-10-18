@@ -1,34 +1,35 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
-import main.java.GGD.GGD;
-import main.java.GGD.GraphPattern;
-import main.java.minerDataStructures.CommonSubparts;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
-import main.java.minerDataStructures.nngraph.NNDescent;
-import main.java.minerDataStructures.nngraph.Neighbor;
-import main.java.minerDataStructures.nngraph.SimilarityInterface;
-import main.java.minerDataStructures.similarityMeasures.ExtractionMeasures;
+import ggdBase.GGD;
+import ggdBase.GraphPattern;
+import minerDataStructures.CommonSubparts;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
+import minerDataStructures.answergraph.AnswerGraph;
+import minerDataStructures.nngraph.NNDescent;
+import minerDataStructures.nngraph.NNGraph;
+import minerDataStructures.nngraph.Neighbor;
+import minerDataStructures.nngraph.SimilarityInterface;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import java.io.IOException;
 import java.util.*;
 
 public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMethod<NodeType, EdgeType> {
-        Double diversityThreshold;
-        Double minCoverage;
-        Double minDiversity;
-        Double confidenceThreshold;
-        SimilarityInterface<GGDLatticeNode<NodeType, EdgeType>> interfaceSim;
-        ExtractionMeasures<NodeType, EdgeType> extractionMeasure;
-        Integer numberOfNodes = 0;
-        Integer numberOfEdges = 0;
-        Integer maxK;
-        List<GGDLatticeNode<NodeType,EdgeType>> listOfAllLatticeNodes = new LinkedList<>();
-        PossibleGGDSet_2 posSet = new PossibleGGDSet_2();
-        Map<Integer, Tuple<Integer, CommonSubparts>> possibleTargetsWithConfidence = new HashMap<>();
-        private NNDescent<GGDLatticeNode<NodeType, EdgeType>> graph ;
-        Integer maxHops = 2;
+    Double diversityThreshold;
+    Double minCoverage;
+    Double minDiversity;
+    Double confidenceThreshold;
+    SimilarityInterface<GGDLatticeNode<NodeType, EdgeType>> interfaceSim;
+    ExtractionMeasures<NodeType, EdgeType> extractionMeasure;
+    Integer numberOfNodes = 0;
+    Integer numberOfEdges = 0;
+    Integer maxK;
+    List<GGDLatticeNode<NodeType,EdgeType>> listOfAllLatticeNodes = new LinkedList<>();
+    PossibleGGDSet_2 posSet = new PossibleGGDSet_2();
+    Map<Integer, Tuple<Integer, CommonSubparts>> possibleTargetsWithConfidence = new HashMap<>();
+    private NNDescent<GGDLatticeNode<NodeType, EdgeType>> graph ;
+    Integer maxHops = 2;
 
 
     public GreedyBasedGGDExtraction(Integer kEdge, Double diversityThreshold, Double confidenceThreshold, SimilarityInterface<GGDLatticeNode<NodeType, EdgeType>> interfaceSim, Double minCoverage, Double minDiversity, Integer maxK, Integer kgraph){
@@ -74,47 +75,48 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
         }
         int size = posSet.ggdSources.size();
         Object[] currentPosSet = this.posSet.ggdSources.toArray();
-        for(int i = size-1; i > 0; i--){
-            Iterator<int[]> combinationsIterator = CombinatoricsUtils.combinationsIterator(size, i);
-            Set<Integer> currentMax = new HashSet<>();
-            Tuple<Double, Double> currentTuple = new Tuple<>(0.0, 0.0);
-            while (combinationsIterator.hasNext()){
-                int[] currentCombination = combinationsIterator.next();
-                Set<Integer> indexes = new HashSet<>();
-                if(currentCombination.length == 1){
-                    indexes.add((Integer) currentPosSet[currentCombination[0]]);
-                }else {
-                    for (int j = 0; i < currentCombination.length; j++) {
-                        indexes.add((Integer) currentPosSet[currentCombination[j]]);
+        if(overallCoverage.x >= this.posSet.coverage){
+            if(posSet.ggdSources.size() < maxK){
+                posSet.addNewSource(newIndex, overallCoverage.x, overallCoverage.y);
+                change = 1;
+                return  change;
+            }else{
+                for (int i = size - 1; i > 0; i--) {
+                    Iterator<int[]> combinationsIterator = CombinatoricsUtils.combinationsIterator(size, i);
+                    Set<Integer> currentMax = new HashSet<>();
+                    Tuple<Double, Double> currentTuple = new Tuple<>(0.0, 0.0);
+                    while (combinationsIterator.hasNext()) {
+                        int[] currentCombination = combinationsIterator.next();
+                        Set<Integer> indexes = new HashSet<>();
+                        if (currentCombination.length == 1) {
+                            indexes.add((Integer) currentPosSet[currentCombination[0]]);
+                        } else {
+                            for (int j = 0; j < currentCombination.length; j++) {
+                                indexes.add((Integer) currentPosSet[currentCombination[j]]);
+                            }
+                        }
+                        Double thisCoverage = calculateCoverage(indexes, newIndex);
+                        Double thisDiversity = calculateDiversity(indexes, newIndex);
+                        Double similarity = calculateSimilarityInSetIndexes(indexes, newIndex);
+                        if (thisCoverage >= this.posSet.coverage && thisCoverage > currentTuple.x && calculateSimilarityInSetIndexes(indexes, newIndex) >= this.diversityThreshold) {
+                            currentMax.clear();
+                            currentMax.addAll(indexes);
+                            currentMax.add(newIndex);
+                            currentTuple.x = thisCoverage;
+                            currentTuple.y = thisDiversity;
+                            break;
+                        }
+                    }
+                    if (currentTuple.x.doubleValue() != 0.0 && currentTuple.y.doubleValue() != 0.0) {
+                        posSet.ggdSources.clear();
+                        posSet.ggdSources.addAll(currentMax);
+                        posSet.diversity = currentTuple.y;
+                        posSet.coverage = currentTuple.x;
+                        change = 1;
+                        return change;
                     }
                 }
-                Double thisCoverage = calculateCoverage(indexes, newIndex);
-                Double thisDiversity = calculateDiversity(indexes, newIndex);
-                //                if(thisCoverage >= this.posSet.coverage && thisDiversity >= this.posSet.diversity && thisCoverage > currentTuple.x && thisDiversity > currentTuple.y && calculateSimilarityInSetIndexes(indexes, newIndex) >= this.diversityThreshold){
-                if(thisCoverage >= this.posSet.coverage && thisDiversity >= this.posSet.diversity && thisCoverage > currentTuple.x && calculateSimilarityInSetIndexes(indexes, newIndex) >= this.diversityThreshold){
-                    //currentMax = new HashSet<>();
-                    currentMax.clear();
-                    currentMax.addAll(indexes);// = indexes;// = indexes;
-                    currentMax.add(newIndex);
-                    currentTuple.x = thisCoverage;
-                    currentTuple.y = thisDiversity;//= new Tuple<>(thisCoverage, thisDiversity);
-                }
             }
-            //if(!currentMax.isEmpty()){
-            if(currentTuple.x.doubleValue() != 0.0 && currentTuple.y.doubleValue() != 0.0){
-                posSet.ggdSources.clear();
-                posSet.ggdSources.addAll(currentMax);
-                posSet.diversity = currentTuple.y;
-                posSet.coverage = currentTuple.x;
-                change = 1;
-                return change;
-            }
-        }
-        if(overallCoverage.x >= this.posSet.coverage && posSet.ggdSources.size() < maxK){
-            //if(overallCoverage.x >= this.posSet.coverage && overallCoverage.y >= this.posSet.diversity && posSet.ggdSources.size() < maxK){
-            posSet.addNewSource(newIndex, overallCoverage.x, overallCoverage.y);
-            change = 1;
-            return  change;
         }
         return change;
     }
@@ -136,7 +138,7 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
                 posSet.addNewSource(index, coverageNewIndex, 0.0);
                 change = 1;
                 return change;
-            }else if (coverDiver.x >= previousCoverage){// && calculateSimilarityInSetIndexes(posSet.ggdSources, index) >= this.diversityThreshold) {
+            }else if (coverDiver.x >= previousCoverage){
                 posSet.addNewSource(index, coverDiver.x, coverDiver.y);
                 change = 1;
                 return change;
@@ -167,7 +169,6 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
         }else if(posSet.ggdSources.size() >= this.maxK){
             change = checkChanges(posSet, index);
         }
-        //addToPossibleTargets(index, change);
         return change;
     }
 
@@ -238,14 +239,16 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
 
 
     public Double calculateCoverage(GGDLatticeNode<NodeType, EdgeType> node){
-        Set<Tuple<String, String>> labelIds = matchedSourceIds_AG(node);
-        return Double.valueOf(labelIds.size())/Double.valueOf(this.numberOfNodes+this.numberOfEdges);
+        Integer totalSize = matchedSourceIds(node);
+        Double d = Double.valueOf(totalSize)/Double.valueOf(this.numberOfNodes+this.numberOfEdges);
+        System.out.println("Coverage:::" + d);
+        return Double.valueOf(totalSize)/Double.valueOf(this.numberOfNodes+this.numberOfEdges);
     }
 
 
     public Tuple<Double, Double> calculatePossibilityOfInsertion(PossibleGGDSet_2 posSet, Integer index){
         Double newcoverage = calculateCoverage(posSet.ggdSources, index);
-        Double newDiv = calculateDiversity(posSet.ggdSources, index);
+        Double newDiv = 0.0;
         return new Tuple<>(newcoverage, newDiv);
     }
 
@@ -269,6 +272,62 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
         return labelIds;
     }
 
+    public HashMap<String, HashSet<String>> matchedSourceIds_AGMap(GGDLatticeNode<NodeType, EdgeType> source){
+        HashMap<String, HashSet<String>> labelIds = new HashMap<>();
+        GraphPattern<NodeType,EdgeType> sourcePattern = (GraphPattern<NodeType,EdgeType>) source.query.gp;
+        for(String var: sourcePattern.getVerticesVariables()){
+            Set<String> nodeIds = source.query.getAnswergraph().getNodeIds(var);
+            HashSet nodeIds_new = new HashSet<String>();
+            nodeIds_new.addAll(nodeIds);
+            String label = sourcePattern.getLabelOfThisVariable(var);
+            if(labelIds.containsKey(label)){
+                labelIds.get(label).addAll(nodeIds_new);
+            }else{
+                labelIds.put(label, nodeIds_new);
+            }
+        }
+        for(String var: sourcePattern.getEdgesVariables()){
+            String label = sourcePattern.getLabelOfThisVariable(var);
+            Set<String> edgesIds = source.query.getAnswergraph().getEdgeIds(var);
+            HashSet edgesIds_new = new HashSet<String>();
+            edgesIds_new.addAll(edgesIds);
+            if(labelIds.containsKey(label)){
+                labelIds.get(label).addAll(edgesIds_new);
+            }else{
+                labelIds.put(label, edgesIds_new);
+            }
+        }
+        return labelIds;
+    }
+
+    public Integer matchedSourceIds(GGDLatticeNode<NodeType, EdgeType> source){
+        GraphPattern<NodeType,EdgeType> sourcePattern = (GraphPattern<NodeType,EdgeType>) source.query.gp;
+        HashMap<String, HashSet<String>> labelIds = new HashMap<>();
+        HashSet<String> nodeIds = new HashSet<>();
+        HashSet<String> edges = new HashSet<>();
+        for(String var: sourcePattern.getVerticesVariables()){
+            nodeIds.addAll(source.query.getAnswergraph().getNodeIds(var));
+        }
+        Integer sizeNodes = nodeIds.size();
+        for(String var: sourcePattern.getEdgesVariables()){
+            String label = sourcePattern.getLabelOfThisVariable(var);
+            Set<String> edgesIds = source.query.getAnswergraph().getEdgeIds(var);
+            HashSet edgesIds_new = new HashSet<String>();
+            edgesIds_new.addAll(edgesIds);
+            if(labelIds.containsKey(label)){
+                labelIds.get(label).addAll(edgesIds_new);
+            }else{
+                labelIds.put(label, edgesIds_new);
+            }
+        }
+        Integer sizeEdges = 0;
+        for(Set<String> value : labelIds.values()) {
+            sizeEdges = sizeEdges + value.size();
+        }
+        return (sizeNodes + sizeEdges);
+    }
+
+
     public Double calculateDiversity(Set<Integer> indexes, Integer index){
         Set<Tuple<String, String>> labelIdsIntersection = new HashSet<Tuple<String, String>>();
         Set<Tuple<String,String>> labelIdsUnion = new HashSet<>();
@@ -281,52 +340,27 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
         return  (1 - (Double.valueOf(labelIdsIntersection.size())/Double.valueOf(labelIdsUnion.size())));
     }
 
+
     public Double calculateCoverage(Set<Integer> indexes, Integer index){
-        Set<Tuple<String, String>> labelIds = new HashSet<Tuple<String, String>>();
-        labelIds.addAll(matchedSourceIds_AG(this.listOfAllLatticeNodes.get(index)));
+        HashMap<String, HashSet<String>> labelIds = new HashMap<>();
+        labelIds = matchedSourceIds_AGMap(this.listOfAllLatticeNodes.get(index));
         for(Integer id: indexes){
-            labelIds.addAll(matchedSourceIds_AG(this.listOfAllLatticeNodes.get(id)));
-        }
-        return Double.valueOf(labelIds.size())/Double.valueOf(this.numberOfNodes+this.numberOfEdges);
-    }
-
-    public void addToPossibleTargets(Integer index, int change) throws CloneNotSupportedException {
-        if(this.possibleTargetsWithConfidence.isEmpty() && change == 1){
-            this.possibleTargetsWithConfidence.put(index, new Tuple<>(-1, new CommonSubparts(0.0, new ArrayList<>())));
-        }else if(!this.possibleTargetsWithConfidence.isEmpty()){
-            for(Integer sourceNode : this.possibleTargetsWithConfidence.keySet()){
-                GGDLatticeNode<NodeType, EdgeType> source = this.listOfAllLatticeNodes.get(sourceNode);
-                GGDLatticeNode<NodeType, EdgeType> possibleTarget = this.listOfAllLatticeNodes.get(index);
-                if(this.interfaceSim.similarity(source, possibleTarget) >= this.diversityThreshold){
-                    //check confidence value
-                    List<CommonSubparts> confidenceResult = extractionMeasure.GGDConfidence_AG(source, possibleTarget);
-                    if(!confidenceResult.isEmpty()){
-                        CommonSubparts cand = confidenceResult.get(0);
-                        if(confidenceResult.size() > 1) {
-                            for (CommonSubparts conf : confidenceResult) {
-                                double confidence = conf.confidence;
-                                List<Tuple<String, String>> currentCommon = conf.commonSubgraph;
-                                GGD<NodeType, EdgeType> newGGD;
-                                if (currentCommon.size() == cand.commonSubgraph.size() && confidence > cand.confidence) {
-                                    cand = conf;
-                                } else if (currentCommon.size() > cand.commonSubgraph.size()) {
-                                    cand = conf;
-                                }
-                            }
-                        }
-                        if(cand.confidence > this.possibleTargetsWithConfidence.get(sourceNode).y.confidence){
-                            this.possibleTargetsWithConfidence.put(sourceNode, new Tuple<>(index, cand));
-                        }
-                        //this.possibleTargetsWithConfidence.get(sourceNode).add(new Tuple<>(index, cand));
-                    }
-
+            HashMap<String, HashSet<String>> all = matchedSourceIds_AGMap(this.listOfAllLatticeNodes.get(id));
+            for(String key: all.keySet()){
+                if(labelIds.containsKey(key)){
+                    labelIds.get(key).addAll(all.get(key));
+                }else{
+                    labelIds.put(key, all.get(key));
                 }
-
-            }
-            if(change == 1){
-                this.possibleTargetsWithConfidence.put(index, new Tuple<>(-1, new CommonSubparts(0.0, new ArrayList<>())));
             }
         }
+        Integer totalSize = 0;
+        for(String label: labelIds.keySet()){
+            totalSize = totalSize + labelIds.get(label).size();
+        }
+        Double cv = Double.valueOf(totalSize)/Double.valueOf(this.numberOfNodes+this.numberOfEdges);
+        System.out.println("Coverage set:::" + cv);// + "size of labelids" + labelIds.size());
+        return cv;
     }
 
     @Override
@@ -340,21 +374,16 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
     public Set<GGD<NodeType, EdgeType>> extractGGDs() throws IOException, CloneNotSupportedException {
         Set<GGD<NodeType, EdgeType>> setOfGGDs = new HashSet<GGD<NodeType, EdgeType>>();
         graph.computeGraph(this.listOfAllLatticeNodes);
-        //graph.printGraphGGDLatticeToFile();
         //find target candidates only for ggdsources
-        System.out.println("Source set:" + this.posSet.ggdSources.size() + " coverage" + this.posSet.coverage + " diversity" + this.posSet.diversity);
+        System.out.println("Source set:" + this.posSet.ggdSources.size() + " coverage" + this.posSet.coverage + " diversity" + this.posSet.diversity + "total number of candidates " + graph.getNumberNodes());
         for(Integer i : this.posSet.ggdSources){
             GGDLatticeNode<NodeType, EdgeType> queryNode = this.listOfAllLatticeNodes.get(i);
             List<Neighbor> result = graph.NSWkRangeSearch(queryNode, this.diversityThreshold, this.maxHops);
             System.out.println("Evaluating pairs of Query node::::");
             queryNode.prettyPrint();
             for(Neighbor pairNode: result){
-                //System.out.println("Query node::::");
-                // queryNode.prettyPrint();
-                // System.out.println("Query result::::");
-                // ((GGDLatticeNode<NodeType, EdgeType>) pairNode.node).prettyPrint();
-                //System.out.println("######################## -------------- ###############");
-                List<CommonSubparts> confidenceResult = extractionMeasure.GGDConfidence_AG(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node);
+                List<CommonSubparts> confidenceResult = extractionMeasure.GGDConfidence_AG(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node);//GGDConfidence_AG(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node);
+                System.out.println("Size of confidence result::" + confidenceResult.size());
                 if(confidenceResult.isEmpty()){
                     continue;
                 }
@@ -376,21 +405,96 @@ public class GreedyBasedGGDExtraction<NodeType, EdgeType> extends ExtractionMeth
                         GGD<NodeType, EdgeType> newGGD = buildGGD(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node, cand.commonSubgraph, cand.confidence);
                         if(newGGD != null){
                             setOfGGDs.add(newGGD);
+                            System.out.println("added new GGD!!");
                         }
                     }
                 }else if(((GGDLatticeNode<NodeType, EdgeType>) pairNode.node).pattern.getVertices().size() > 1){
                     GGD<NodeType, EdgeType> newGGD = buildGGD(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node, cand.commonSubgraph, cand.confidence);
                     if(newGGD != null){
                         setOfGGDs.add(newGGD);
+                        System.out.println("added new GGD!!");
                     }
                 }
             }
-
-
         }
         return setOfGGDs;
     }
 
+    @Override
+    public Set<GGD<NodeType, EdgeType>> extractGGDs_NoAG() throws IOException, CloneNotSupportedException {
+        Set<GGD<NodeType, EdgeType>> setOfGGDs = new HashSet<GGD<NodeType, EdgeType>>();
+        graph.computeGraph(this.listOfAllLatticeNodes);
+        //find target candidates only for ggdsources
+        System.out.println("Source set:" + this.posSet.ggdSources.size() + " coverage" + this.posSet.coverage + " diversity" + this.posSet.diversity + "total number of candidates " + graph.getNumberNodes());
+        for(Integer i : this.posSet.ggdSources){
+            GGDLatticeNode<NodeType, EdgeType> queryNode = this.listOfAllLatticeNodes.get(i);
+            List<Neighbor> result = graph.NSWkRangeSearch(queryNode, this.diversityThreshold, this.maxHops);
+            System.out.println("Evaluating pairs of Query node::::");
+            queryNode.prettyPrint();
+            for(Neighbor pairNode: result){
+                List<CommonSubparts> confidenceResult = extractionMeasure.GGDConfidence_defact(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node);//GGDConfidence_AG(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node);
+                System.out.println("Size of confidence result::" + confidenceResult.size());
+                if(confidenceResult.isEmpty()){
+                    continue;
+                }
+                CommonSubparts cand = confidenceResult.get(0);
+                if(confidenceResult.size() > 1) {
+                    for (CommonSubparts conf : confidenceResult) {
+                        double confidence = conf.confidence;
+                        List<Tuple<String, String>> currentCommon = conf.commonSubgraph;
+                        GGD<NodeType, EdgeType> newGGD;
+                        if (currentCommon.size() == cand.commonSubgraph.size() && confidence > cand.confidence) {
+                            cand = conf;
+                        } else if (currentCommon.size() > cand.commonSubgraph.size()) {
+                            cand = conf;
+                        }
+                    }
+                }
+                if(((GGDLatticeNode<NodeType, EdgeType>) pairNode.node).pattern.getLabels().containsAll(queryNode.pattern.getLabels())){
+                    if(queryNode.pattern.getEdges().size() < ((GGDLatticeNode<NodeType, EdgeType>) pairNode.node).pattern.getEdges().size()){
+                        GGD<NodeType, EdgeType> newGGD = buildGGD(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node, cand.commonSubgraph, cand.confidence);
+                        if(newGGD != null){
+                            setOfGGDs.add(newGGD);
+                            System.out.println("added new GGD!!");
+                        }
+                    }
+                }else if(((GGDLatticeNode<NodeType, EdgeType>) pairNode.node).pattern.getVertices().size() > 1){
+                    GGD<NodeType, EdgeType> newGGD = buildGGD(queryNode, (GGDLatticeNode<NodeType, EdgeType>) pairNode.node, cand.commonSubgraph, cand.confidence);
+                    if(newGGD != null){
+                        setOfGGDs.add(newGGD);
+                        System.out.println("added new GGD!!");
+                    }
+                }
+            }
+        }
+        return setOfGGDs;
+    }
+
+    @Override
+    public Set<GraphPattern<NodeType, EdgeType>> getNodes() {
+        Set<GraphPattern<NodeType,EdgeType>> answerSet = new HashSet<>();
+        for(GGDLatticeNode<NodeType,EdgeType> ggd : listOfAllLatticeNodes){
+            if(ggd.getConstraints().constraints.isEmpty()) {
+                answerSet.add(ggd.pattern);
+            }
+        }
+        return answerSet;
+    }
+
+    @Override
+    public AnswerGraph<NodeType, EdgeType> getNodeAnswerGraph(GraphPattern<NodeType, EdgeType> gp) {
+        for(GGDLatticeNode<NodeType,EdgeType> candidate: listOfAllLatticeNodes){
+            if(candidate.pattern.equals(gp) && candidate.getConstraints().constraints.isEmpty()){
+                return candidate.query.getAnswergraph();
+            }
+        }
+        return new AnswerGraph<NodeType,EdgeType>(gp);
+    }
+
+    @Override
+    public NNGraph<GGDLatticeNode<NodeType, EdgeType>> getNNGraph() {
+        return this.graph;
+    }
 
 
 }

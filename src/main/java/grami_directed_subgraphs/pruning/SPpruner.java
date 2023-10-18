@@ -17,15 +17,15 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.pruning;
+package grami_directed_subgraphs.pruning;
 
-import main.java.grami_directed_subgraphs.CSP.Variable;
-import main.java.grami_directed_subgraphs.CSP.VariablePair;
-import main.java.grami_directed_subgraphs.dataStructures.ConnectedComponent;
-import main.java.grami_directed_subgraphs.dataStructures.Graph;
-import main.java.grami_directed_subgraphs.dataStructures.Query;
-import main.java.grami_directed_subgraphs.dataStructures.myNode;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
+import grami_directed_subgraphs.CSP.Variable;
+import grami_directed_subgraphs.CSP.VariablePair;
+import grami_directed_subgraphs.dataStructures.ConnectedComponent;
+import grami_directed_subgraphs.dataStructures.Graph;
+import grami_directed_subgraphs.dataStructures.Query;
+import grami_directed_subgraphs.dataStructures.myNode;
+import grami_directed_subgraphs.utilities.MyPair;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -43,7 +43,7 @@ public class SPpruner
 	}
 	
 	
-	public void getPrunedLists(ArrayList<HashMap<Integer,myNode>> candidatesByNodeID, Query qry)
+	public void getPrunedLists(ArrayList<HashMap<Integer, myNode>> candidatesByNodeID, Query qry)
 	{
 		
 		ArrayList<ConnectedComponent> cls= qry.getConnectedLabels();
@@ -69,22 +69,22 @@ public class SPpruner
 	}
 	
 	
-	public void getPrunedLists(HashMap<Integer,HashMap<Integer,myNode>> nodesByLabel, Query qry)
+	public void getPrunedLists(HashMap<Integer, HashMap<Integer, myNode>> nodesByLabel, Query qry)
 	{
 		System.out.println("called Automorphism pruned lists");
-		HashMap<Integer, HashMap<Integer,myNode>> pruned= new HashMap<Integer, HashMap<Integer,myNode>>();// QueryID -> NodeID->NODE
+		HashMap<Integer, HashMap<Integer, myNode>> pruned= new HashMap<Integer, HashMap<Integer, myNode>>();// QueryID -> NodeID->NODE
 		ArrayList<ConnectedComponent> cls= qry.getConnectedLabels();
 				
 		//refine according to nodeLabels
 		for (int i = 0; i < qry.getListGraph().getNodeCount(); i++) 
 		{
 			int label= qry.getListGraph().getNodeLabel(i);
-			pruned.put(i, (HashMap<Integer,myNode>)nodesByLabel.get(label).clone());
+			pruned.put(i, (HashMap<Integer, myNode>)nodesByLabel.get(label).clone());
 		}
 		
 		//refine according to degree !!
-		HashMap<Integer, HashMap<Integer, Integer>> nodeOutLabelDegrees= new HashMap<Integer, HashMap<Integer,Integer>>();//nodeID-->(Label,Degree)
-		HashMap<Integer, HashMap<Integer, Integer>> nodeInLabelDegrees= new HashMap<Integer, HashMap<Integer,Integer>>();
+		HashMap<Integer, HashMap<Integer, Integer>> nodeOutLabelDegrees= new HashMap<Integer, HashMap<Integer, Integer>>();//nodeID-->(Label,Degree)
+		HashMap<Integer, HashMap<Integer, Integer>> nodeInLabelDegrees= new HashMap<Integer, HashMap<Integer, Integer>>();
 				
 		for (int i = 0; i < cls.size(); i++) 
 		{
@@ -119,7 +119,7 @@ public class SPpruner
 			HashMap<Integer, Integer> degreeOutCons= nodeOutLabelDegrees.get(i);
 			HashMap<Integer, Integer> degreeInCons= nodeInLabelDegrees.get(i);
 			
-			HashMap<Integer,myNode> candidates=pruned.get(i);
+			HashMap<Integer, myNode> candidates=pruned.get(i);
 			boolean isValidNode=true;
 			
 			for (Iterator<Entry<Integer, myNode>> it = candidates.entrySet().iterator(); it.hasNext();)
@@ -128,7 +128,7 @@ public class SPpruner
 				myNode node=nodeEntry.getValue();
 				isValidNode=true;
 				if(degreeOutCons!=null)
-				for (Iterator<Entry<Integer, Integer>> iterator = degreeOutCons.entrySet().iterator(); iterator.hasNext();) 
+				for (Iterator<Entry<Integer, Integer>> iterator = degreeOutCons.entrySet().iterator(); iterator.hasNext();)
 				{
 					Entry<Integer, Integer> entry =  iterator.next();
 					int label=entry.getKey();
@@ -139,7 +139,7 @@ public class SPpruner
 				}
 				if(isValidNode && degreeInCons!=null)
 				{
-					for (Iterator<Entry<Integer, Integer>> iterator = degreeInCons.entrySet().iterator(); iterator.hasNext();) 
+					for (Iterator<Entry<Integer, Integer>> iterator = degreeInCons.entrySet().iterator(); iterator.hasNext();)
 					{
 						Entry<Integer, Integer> entry =  iterator.next();
 						int label=entry.getKey();
@@ -175,10 +175,10 @@ public class SPpruner
 	}
 	
 	
-	public void getPrunedLists(Graph graph, Query qry,HashMap<Integer, HashSet<Integer>> nonCandidates)
+	public void getPrunedLists(Graph graph, Query qry, HashMap<Integer, HashSet<Integer>> nonCandidates)
 	{
 		System.out.println("called pruned lists");
-		HashMap<Integer, HashMap<Integer,myNode>> pruned= new HashMap<Integer, HashMap<Integer,myNode>>();// QueryID -> NodeID->NODE
+		HashMap<Integer, HashMap<Integer, myNode>> pruned= new HashMap<Integer, HashMap<Integer, myNode>>();// QueryID -> NodeID->NODE
 
 		ArrayList<ConnectedComponent> cls= qry.getConnectedLabels();
 				
@@ -186,16 +186,16 @@ public class SPpruner
 		for (int i = 0; i < qry.getListGraph().getNodeCount(); i++) 
 		{
 			int label= qry.getListGraph().getNodeLabel(i);
-			pruned.put(i, (HashMap<Integer,myNode>)graph.getFreqNodesByLabel().get(label).clone());
+			pruned.put(i, (HashMap<Integer, myNode>)graph.getFreqNodesByLabel().get(label).clone());
 		}
 		
-		for (Iterator<Entry<Integer, HashSet<Integer>>> iterator = nonCandidates.entrySet().iterator(); iterator.hasNext();) 
+		for (Iterator<Entry<Integer, HashSet<Integer>>> iterator = nonCandidates.entrySet().iterator(); iterator.hasNext();)
 		{
 			Entry<Integer, HashSet<Integer>> entry = iterator.next();
 			int qryID= entry.getKey();
-			HashMap<Integer,myNode> prunedCands= pruned.get(qryID);
+			HashMap<Integer, myNode> prunedCands= pruned.get(qryID);
 			HashSet<Integer> nonCands= entry.getValue();
-			for (Iterator iterator2 = nonCands.iterator(); iterator2.hasNext();) 
+			for (Iterator iterator2 = nonCands.iterator(); iterator2.hasNext();)
 			{
 				Integer integer = (Integer) iterator2.next();
 				prunedCands.remove(integer);
@@ -203,8 +203,8 @@ public class SPpruner
 		}
 				
 		//refine according to degree !!
-		HashMap<Integer, HashMap<Integer, Integer>> nodeOutLabelDegrees= new HashMap<Integer, HashMap<Integer,Integer>>();//nodeID-->(Label,Degree)
-		HashMap<Integer, HashMap<Integer, Integer>> nodeInLabelDegrees= new HashMap<Integer, HashMap<Integer,Integer>>();
+		HashMap<Integer, HashMap<Integer, Integer>> nodeOutLabelDegrees= new HashMap<Integer, HashMap<Integer, Integer>>();//nodeID-->(Label,Degree)
+		HashMap<Integer, HashMap<Integer, Integer>> nodeInLabelDegrees= new HashMap<Integer, HashMap<Integer, Integer>>();
 		
 		for (int i = 0; i < cls.size(); i++) 
 		{
@@ -239,7 +239,7 @@ public class SPpruner
 			HashMap<Integer, Integer> degreeOutCons= nodeOutLabelDegrees.get(i);
 			HashMap<Integer, Integer> degreeInCons= nodeInLabelDegrees.get(i);
 			
-			HashMap<Integer,myNode> candidates=pruned.get(i);
+			HashMap<Integer, myNode> candidates=pruned.get(i);
 			boolean isValidNode=true;
 			
 			for (Iterator<Entry<Integer, myNode>> it = candidates.entrySet().iterator(); it.hasNext();)
@@ -248,7 +248,7 @@ public class SPpruner
 				myNode node=nodeEntry.getValue();
 				isValidNode=true;
 				if(degreeOutCons!=null)
-				for (Iterator<Entry<Integer, Integer>> iterator = degreeOutCons.entrySet().iterator(); iterator.hasNext();) 
+				for (Iterator<Entry<Integer, Integer>> iterator = degreeOutCons.entrySet().iterator(); iterator.hasNext();)
 				{
 					Entry<Integer, Integer> entry =  iterator.next();
 					int label=entry.getKey();
@@ -259,7 +259,7 @@ public class SPpruner
 				}
 				if(isValidNode && degreeInCons!=null)
 				{
-					for (Iterator<Entry<Integer, Integer>> iterator = degreeInCons.entrySet().iterator(); iterator.hasNext();) 
+					for (Iterator<Entry<Integer, Integer>> iterator = degreeInCons.entrySet().iterator(); iterator.hasNext();)
 					{
 						Entry<Integer, Integer> entry =  iterator.next();
 						int label=entry.getKey();
@@ -314,7 +314,7 @@ public class SPpruner
 	private void AC_3_New(Variable[] input, int freqThreshold)
 	{
 		LinkedList<VariablePair> Q= new LinkedList<VariablePair>();
-		HashSet<String> contains = new HashSet<String> ();
+		HashSet<String> contains = new HashSet<String>();
 		VariablePair vp;
 		//initialize...
 		for (int i = 0; i < input.length; i++) 
@@ -350,7 +350,7 @@ public class SPpruner
 				ArrayList<MyPair<Integer, Double>> list=v1.getDistanceConstrainedBy();
 				for (int j = 0; j < list.size(); j++) 
 				{
-					Integer tempMP = list.get(j).getA(); 
+					Integer tempMP = list.get(j).getA();
 					Variable consVar=variables[tempMP];
 					vp =new VariablePair(consVar,v1,list.get(j).getB());
 					if(!contains.contains(vp.getString()))
@@ -385,12 +385,12 @@ public class SPpruner
 	 */
 	private void refine_Newest(Variable v1, Variable v2, double edgeLabel, int freqThreshold)
 	{
-		HashMap<Integer,myNode> listA,listB;
+		HashMap<Integer, myNode> listA,listB;
 		
 		int labelB=v2.getLabel();//lebel of my neighbor
 		listA=v1.getList();//the first column
 		listB=v2.getList();//the second column
-		HashMap<Integer,myNode> newList= new HashMap<Integer,myNode>();//the newly assigned first column
+		HashMap<Integer, myNode> newList= new HashMap<Integer, myNode>();//the newly assigned first column
 		HashMap<Integer, myNode> newReachableListB = new HashMap<Integer, myNode>();//the newly asigned second column
 		
 		//go over the first column
@@ -419,12 +419,12 @@ public class SPpruner
 		v2.setList(newReachableListB);
 	}
 	
-	public static void printSPs(HashMap<Integer, HashMap<Integer,myNode>> pruned)
+	public static void printSPs(HashMap<Integer, HashMap<Integer, myNode>> pruned)
 	{
 		
-		for (Iterator<  Entry< Integer, HashMap<Integer,myNode> > >  it= pruned.entrySet().iterator(); it.hasNext();)
+		for (Iterator<Entry<Integer, HashMap<Integer, myNode>>> it = pruned.entrySet().iterator(); it.hasNext();)
 		{
-			Entry< Integer, HashMap<Integer,myNode> > ar =  it.next();
+			Entry<Integer, HashMap<Integer, myNode>> ar =  it.next();
 			
 			System.out.println("New Freq Label: "+ar.getKey()+" with size: "+ar.getValue().size());
 		}

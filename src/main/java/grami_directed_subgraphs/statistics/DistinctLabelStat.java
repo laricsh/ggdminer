@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.statistics;
+package grami_directed_subgraphs.statistics;
 
 import java.awt.*;
 
@@ -28,7 +28,7 @@ public class DistinctLabelStat
 	Point maxEdge;
 	int maxNodeIndex;
 	int maxEdgeIndex;
-	public DistinctLabelStat(int numberOfPatterns,Point maxNode,Point maxEdge,int maxNodeIndex,int maxEdgeIndex) 
+	public DistinctLabelStat(int numberOfPatterns, Point maxNode, Point maxEdge, int maxNodeIndex, int maxEdgeIndex)
 	{
 		this.numberOfPatterns=numberOfPatterns;
 		this.maxNode=maxNode;
@@ -37,7 +37,7 @@ public class DistinctLabelStat
 		this.maxEdgeIndex=maxEdgeIndex;
 	}
 	
-	public String toString2() 
+	public String toString2()
 	{
 		String out =""+numberOfPatterns+",";
 		out+=printPoint2(maxNode,maxNodeIndex)+",";
@@ -45,7 +45,7 @@ public class DistinctLabelStat
 		return out;
 	}
 	
-	private String printPoint2(Point p,int index)
+	private String printPoint2(Point p, int index)
 	{
 		String pair="";
 		pair+=p.x+"-"+p.y;
@@ -53,7 +53,7 @@ public class DistinctLabelStat
 	}
 	
 	@Override
-	public String toString() 
+	public String toString()
 	{
 		String out ="{ "+numberOfPatterns+",";
 		out+=printPoint(maxNode,maxNodeIndex)+",";
@@ -62,7 +62,7 @@ public class DistinctLabelStat
 		return out;
 	}
 	
-	private String printPoint(Point p,int index)
+	private String printPoint(Point p, int index)
 	{
 		String pair="(";
 		pair+=p.x+","+p.y+")"+":"+index;

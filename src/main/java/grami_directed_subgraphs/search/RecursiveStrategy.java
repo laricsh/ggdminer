@@ -12,10 +12,10 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
 
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,7 +50,7 @@ public class RecursiveStrategy<NodeType, EdgeType> implements
 	 *      int)
 	 */
 	public Collection<HPListGraph<NodeType, EdgeType>> search(  //INITIAL NODES SEARCH
-			final Algorithm<NodeType, EdgeType> algo,int freqThresh) {
+                                                                final Algorithm<NodeType, EdgeType> algo, int freqThresh) {
 		ret = new ArrayList<HPListGraph<NodeType, EdgeType>>();
 		
 		extender = algo.getExtender(freqThresh);

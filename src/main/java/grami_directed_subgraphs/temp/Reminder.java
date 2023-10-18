@@ -17,7 +17,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package main.java.grami_directed_subgraphs.temp;
+package grami_directed_subgraphs.temp;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -46,7 +46,7 @@ public class Reminder {
             //timer.cancel();
         }
     }
-    class application extends Thread  {
+    class application extends Thread {
     	volatile boolean stop=false; 
         public void run() {
             

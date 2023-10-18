@@ -1,10 +1,10 @@
-package main.java.preProcess;
+package preProcess;
 
-import main.java.minerDataStructures.AttributePair;
-import main.java.minerDataStructures.DataTypes;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
-import main.java.preProcess.EditDistanceJoiner.EditDistanceClusterer;
+import minerDataStructures.AttributePair;
+import minerDataStructures.DataTypes;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
+import preProcess.EditDistanceJoiner.EditDistanceClusterer;
 
 import java.io.Serializable;
 import java.util.*;
@@ -22,8 +22,8 @@ public class AttributeGroup<NodeType, EdgeType> implements PreProcessSelection {
     List<AttributePair> allAttributePairs = new ArrayList<>();
     Integer frequency;
 
-    public AttributeGroup(PropertyGraph pg, Double threshold, Integer frequency){
-        this.pg = pg;
+    public AttributeGroup(Double threshold, Integer frequency){
+        this.pg = PropertyGraph.getInstance();
         this.threshold = threshold;
         this.frequency = frequency;
     }
@@ -163,19 +163,19 @@ public class AttributeGroup<NodeType, EdgeType> implements PreProcessSelection {
     public List<AttributePair> preprocess() {
         sampleVerticesAndEdges_Id = SampleLabels_Id(0.05, pg.getVerticesProperties_Id());
         sampleVerticesAndEdges_Id.putAll(SampleLabels_Id(0.05, pg.getEdgesProperties_Id()));
-       setAttributesFromGraph();
-       ClusterStrings();
-       List<AttributePair> attrPairs = getAttributePairsIntBoolean();
-       allAttributePairs.addAll(attrPairs);
-       return allAttributePairs;
+        setAttributesFromGraph();
+        ClusterStrings();
+        List<AttributePair> attrPairs = getAttributePairsIntBoolean();
+        allAttributePairs.addAll(attrPairs);
+        return allAttributePairs;
     }
 
     public HashMap<String, List<HashMap<String, String>>> SampleLabels(Double sampleRate, HashMap<String, List<HashMap<String, String>>> properties){
         HashMap<String, List<HashMap<String, String>>> returnSample = new HashMap<>();
         Set<String> vertexLabels = properties.keySet();
         for(String label : vertexLabels){
-           List<HashMap<String, String>> thisLabel = properties.get(label);
-           double sampleSize = Math.floor(thisLabel.size() * sampleRate);
+            List<HashMap<String, String>> thisLabel = properties.get(label);
+            double sampleSize = Math.floor(thisLabel.size() * sampleRate);
             int[] numbers = new int[(int) sampleSize];
             List<Integer> numbersList = new ArrayList<Integer>(numbers.length);
             Random rand = new Random();

@@ -1,6 +1,6 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
-import main.java.preProcess.EditDistanceJoiner.EditDistanceClusterer;
+import preProcess.EditDistanceJoiner.EditDistanceClusterer;
 
 import java.io.Serializable;
 import java.util.*;
@@ -8,13 +8,13 @@ import java.util.*;
 public class SimilarityIntervalIndex {
 
     PropertyGraph pg = PropertyGraph.getInstance();
-    DecisionBoundaries decision;
-    String label;
-    String attr;
-    HashMap<Integer, Set<Serializable>> clusters = new HashMap<>();
-    HashMap<Serializable, Set<Integer>> reverseIndex = new HashMap<>();
-    HashMap<Serializable, Set<Tuple<Serializable, Double>>> reverseDistance = new HashMap<>();
-    HashMap<String, Set<String>> ValueIds = new HashMap<>();
+    private DecisionBoundaries decision;
+    private String label;
+    private String attr;
+    private HashMap<Integer, Set<Serializable>> clusters = new HashMap<>();
+    private HashMap<Serializable, Set<Integer>> reverseIndex = new HashMap<>();
+    private HashMap<Serializable, Set<Tuple<Serializable, Double>>> reverseDistance = new HashMap<>();
+    private HashMap<String, Set<String>> ValueIds = new HashMap<>();
 
     public HashMap<Serializable, Set<Tuple<Serializable, Double>>> getReverseDistance() {
         if(this.decision.dataType.equalsIgnoreCase("boolean")){
@@ -33,9 +33,9 @@ public class SimilarityIntervalIndex {
     }
 
     public SimilarityIntervalIndex(DecisionBoundaries decision, String label, String attr){
-            this.decision = decision;
-            this.label = label;
-            this.attr = attr;
+        this.decision = decision;
+        this.label = label;
+        this.attr = attr;
     }
 
     public void buildIndex(){
@@ -76,7 +76,11 @@ public class SimilarityIntervalIndex {
     }
 
     public void addToCluster(Set<Serializable> cluster, Integer indexid){
-            this.clusters.put(indexid, cluster);
+        //if(this.clusters.containsKey(indexid)){
+        //    this.clusters.get(indexid).addAll(cluster);
+        //}else{
+        this.clusters.put(indexid, cluster);
+        //}
         for(Serializable clusterMem : cluster){
             if(reverseIndex.containsKey(clusterMem)){
                 reverseIndex.get(clusterMem).add(indexid);
@@ -89,9 +93,9 @@ public class SimilarityIntervalIndex {
     }
 
     public Set<Integer> getClusterIds(Serializable value){
-       if(this.reverseIndex.containsKey(value)){
-           return this.reverseIndex.get(value);
-       }else return new HashSet<>();
+        if(this.reverseIndex.containsKey(value)){
+            return this.reverseIndex.get(value);
+        }else return new HashSet<>();
     }
 
 
@@ -138,7 +142,7 @@ public class SimilarityIntervalIndex {
         Set<String> values = this.ValueIds.keySet();
         List<Double> numberValues = new ArrayList<>();
         for(String str: values){
-           numberValues.add(Double.valueOf(str));
+            numberValues.add(Double.valueOf(str));
         }
         Collections.sort(numberValues);
         Integer index = 0;
@@ -161,6 +165,52 @@ public class SimilarityIntervalIndex {
             index++;
         }
     }
+
+    public void setDecision(DecisionBoundaries decision) {
+        this.decision = decision;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public String getAttr() {
+        return attr;
+    }
+
+    public void setAttr(String attr) {
+        this.attr = attr;
+    }
+
+    public HashMap<Integer, Set<Serializable>> getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(HashMap<Integer, Set<Serializable>> clusters) {
+        this.clusters = clusters;
+    }
+
+    public HashMap<Serializable, Set<Integer>> getReverseIndex() {
+        return reverseIndex;
+    }
+
+    public void setReverseIndex(HashMap<Serializable, Set<Integer>> reverseIndex) {
+        this.reverseIndex = reverseIndex;
+    }
+
+    public HashMap<String, Set<String>> getValueIds() {
+        return ValueIds;
+    }
+
+    public void setValueIds(HashMap<String, Set<String>> valueIds) {
+        ValueIds = valueIds;
+    }
+
+
 
 
 }

@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.search;
+package grami_directed_subgraphs.search;
 
 
 /**
@@ -29,7 +29,7 @@ package main.java.grami_directed_subgraphs.search;
  *            .equals(..))
  */
 public abstract class GenerationPartialStep<NodeType, EdgeType> extends
-		MiningStep<NodeType, EdgeType> {
+        MiningStep<NodeType, EdgeType> {
 
 	/**
 	 * creates a new step, that will use the

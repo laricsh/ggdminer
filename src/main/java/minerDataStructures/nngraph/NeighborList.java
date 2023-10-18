@@ -1,10 +1,9 @@
-package main.java.minerDataStructures.nngraph;
+package minerDataStructures.nngraph;
+
+import minerDataStructures.Tuple;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.*;
 
 /**
  * Bounded list of neighbors.
@@ -30,6 +29,14 @@ public class NeighborList extends BoundedPriorityQueue<Neighbor>
         }
 
         return edges;
+    }
+
+    public final <T> List<Tuple<T, Double>> getAllNeighborsAsList(){
+        List<Tuple<T, Double>> list = new LinkedList<>();
+        for(Neighbor n : this) {
+            list.add(new Tuple<T, Double>((T) n.node, n.similarity));
+        }
+        return list;
     }
 
     /**
@@ -140,4 +147,6 @@ public class NeighborList extends BoundedPriorityQueue<Neighbor>
         }
         return false;
     }
+
+
 }

@@ -1,4 +1,4 @@
-package main.java.ggdSearch;
+package ggdSearch;
 
 /**
  * Copyright 2014 Mohammed Elseidy, Ehab Abdelhamid
@@ -19,16 +19,18 @@ package main.java.ggdSearch;
  along with Grami.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import main.java.GGD.Constraint;
-import main.java.GGD.GGD;
-import main.java.GGD.GraphPattern;
-import main.java.GGD.VerticesPattern;
-import main.java.grami_directed_subgraphs.Dijkstra.DenseRoutesMap;
-import main.java.grami_directed_subgraphs.dataStructures.*;
-import main.java.grami_directed_subgraphs.utilities.MyPair;
-import main.java.minerDataStructures.*;
-import main.java.minerDataStructures.answergraph.AnswerGraph;
+import ggdBase.Constraint;
+import ggdBase.GGD;
+import ggdBase.GraphPattern;
+import ggdBase.VerticesPattern;
+import grami_directed_subgraphs.Dijkstra.DenseRoutesMap;
+import grami_directed_subgraphs.dataStructures.*;
+import grami_directed_subgraphs.utilities.MyPair;
+import minerDataStructures.*;
+import minerDataStructures.answergraph.AnswerGraph;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
@@ -62,10 +64,12 @@ public class GGDSearcher<NodeType, EdgeType>
     public static boolean simExtension;
     public static int maxMappings = 2;
     public static int kgraph = 5;
+    public static Integer maxSource = 7;
+    private GGDRecursiveStrategySet_AG<NodeType, EdgeType> rs;
 
     private String path;
 
-    public GGDSearcher(String path, int freqThreshold,int shortestDistance, List<DecisionBoundaries> boundaries, Double confidence, Double diversityThreshold, Integer kedge, Integer maxHops, Double minCoverage, Double minDiversity, boolean simExtension, int maxMappings, int maxCombination, int kgraph) throws Exception
+    public GGDSearcher(String path, int freqThreshold, int shortestDistance, List<DecisionBoundaries> boundaries, Double confidence, Double diversityThreshold, Integer kedge, Integer maxHops, Double minCoverage, Double minDiversity, boolean simExtension, int maxMappings, int maxCombination, int maxSource, int kgraph) throws Exception
     {
         this.freqThreshold= new IntFrequency(freqThreshold);
         this.distanceThreshold=shortestDistance;
@@ -75,7 +79,7 @@ public class GGDSearcher<NodeType, EdgeType>
         this.maxHops = maxHops;
         this.minCoverage = minCoverage;
         this.minDiversity = minDiversity;
-        graphPatternIndex = new GraphPatternIndex<>(confidence, diversityThreshold, kedge, "greedybased", maxHops, maxCombination, kgraph);
+        graphPatternIndex = new GraphPatternIndex<>(confidence, diversityThreshold, kedge, "greedybased", maxHops, maxSource, kgraph);
         sortedFrequentLabels=singleGraph.getSortedFreqLabels();
         freqEdgeLabels = singleGraph.getFreqEdgeLabels();
         DenseRoutesMap x = new DenseRoutesMap(singleGraph);
@@ -83,12 +87,14 @@ public class GGDSearcher<NodeType, EdgeType>
         firstLevelSingleLabelNoCons = new HashMap<>();
         this.simExtension = simExtension;
         this.maxMappings = maxMappings;
+        this.maxSource = maxSource;
         this.maxCombination = maxCombination;
         this.kgraph = kgraph;
     }
 
     public void buildSimIndexes(){
         System.out.println("Build similarity indexes for each attribute of each label");
+        System.out.println("Size of set to verify" + this.propertyGraph.getSetToVerify().keySet().size());
         this.simIndexes = new SimilarityConstraintIndexes(this.propertyGraph.getSetToVerify());
         simIndexes.buildAllIndexes();
         System.out.println("There is in total::" + simIndexes.totalNumberOfIndexes());
@@ -106,33 +112,42 @@ public class GGDSearcher<NodeType, EdgeType>
         latticeNode.setIdsOfThisEmbedding(query.getAnswergraph().getNodeIds("0"));
         //creating a differential constraints discovery
         DifferentialConstraintDiscovery_AG disc = new DifferentialConstraintDiscovery_AG(query);
-        List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> answer = disc.discoverAllConstraintSingleLabel_AG(latticeNode);//disc.discoverConstraintsSingleLabel(0, latticeNode.getLabel());
+        List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> answer = disc.discoverAllConstraintSingleLabel_AG(latticeNode);
         return answer;
     }
 
 
     public SingleLabelGGDLatticeNode<NodeType, EdgeType> initializeFirstLevel(int firstLabel){
-        String strlabel = propertyGraph.config.getVertexLabels()[firstLabel];
+        String strlabel = propertyGraph.getLabelCodes().get(firstLabel);//propertyGraph.config.getVertexLabels()[firstLabel];
+        if(!propertyGraph.getLabelVertices().contains(strlabel)){
+            return null;
+        }
         Set<Integer> nodeIds = new HashSet<>(); //initializing with empty ids because answer graph will later initialize everything
         SingleLabelGGDLatticeNode<NodeType, EdgeType> latticeNode = new SingleLabelGGDLatticeNode<>(strlabel, nodeIds);
-        List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> brothers = HorizontalExtensionSinglelabel_AG(latticeNode);
-        latticeNode.setBrother(brothers);
-        this.firstLevelSingleLabel.add(latticeNode);
-        for(SingleLabelGGDLatticeNode<NodeType, EdgeType> b: brothers){
-            b.addAllBrother(brothers);
-            b.addBrother(latticeNode);
-            if(b.getIdsOfThisEmbedding().size() == latticeNode.getIdsOfThisEmbedding().size()){
-                this.firstLevelSingleLabel.remove(latticeNode);
-                for(Constraint c : b.getDiffConstraints().constraints){
-                    if(c.getVar2() == null){
-                        this.propertyGraph.removeSetToVerify(c.getAttr1(), this.propertyGraph.getCodeLabels().get(latticeNode.getLabel()).toString());
-                    }else{
-                        this.propertyGraph.removeAttrToCompare(c.getAttr1(), c.getAttr2(), latticeNode.getLabel(), latticeNode.getLabel());
+        if(simExtension) {
+            List<SingleLabelGGDLatticeNode<NodeType, EdgeType>> brothers = HorizontalExtensionSinglelabel_AG(latticeNode);
+            latticeNode.setBrother(brothers);
+            this.firstLevelSingleLabel.add(latticeNode);
+            for (SingleLabelGGDLatticeNode<NodeType, EdgeType> b : brothers) {
+                b.addAllBrother(brothers);
+                b.addBrother(latticeNode);
+                if (b.getIdsOfThisEmbedding().size() == latticeNode.getIdsOfThisEmbedding().size()) {
+                    this.firstLevelSingleLabel.remove(latticeNode);
+                    for (Constraint c : b.getDiffConstraints().constraints) {
+                        if (c.getVar2() == null) {
+                            this.propertyGraph.removeSetToVerify(c.getAttr1(), this.propertyGraph.getCodeLabels().get(latticeNode.getLabel()).toString());
+                        } else {
+                            this.propertyGraph.removeAttrToCompare(c.getAttr1(), c.getAttr2(), latticeNode.getLabel(), latticeNode.getLabel());
+                        }
                     }
                 }
+                this.firstLevelSingleLabel.add(b);
             }
-            this.firstLevelSingleLabel.add(b);
+        }else {
+            this.firstLevelSingleLabel.add(latticeNode);
         }
+        //brothers.add(latticeNode);
+        // this.firstLevelSingleLabel.addAll(brothers);
         this.firstLevelSingleLabelNoCons.put(firstLabel, latticeNode);
         return latticeNode;
     }
@@ -156,7 +171,7 @@ public class GGDSearcher<NodeType, EdgeType>
             {
                 myNode node =  iterator.next();
                 HashMap<Integer, ArrayList<MyPair<Integer, Double>>> neighbours= node.getReachableWithNodes();
-               // if(neighbours != null) System.out.println("Initial node " + node.getID() + " neihgbors size:" + neighbours.size());
+                // if(neighbours != null) System.out.println("Initial node " + node.getID() + " neihgbors size:" + neighbours.size());
                 if(neighbours!=null)
                     for (Iterator<Integer>  iter= neighbours.keySet().iterator(); iter.hasNext();)
                     {
@@ -189,6 +204,8 @@ public class GGDSearcher<NodeType, EdgeType>
                                 gedge.addTo(lg);
                                 DFSCode<NodeType, EdgeType> code = new DFSCode<NodeType,EdgeType>(sortedFrequentLabels,singleGraph,null).set(lg, gedge, gedge, parents);
                                 GGDLatticeNode<NodeType, EdgeType> codeGGD = new GGDLatticeNode<NodeType, EdgeType>(sortedFrequentLabels,singleGraph,null).set(lg, gedge, gedge, parents);
+                                // codeGGD.query.setEmbeddingsFromDFSCode(code.getCurrentVariables());
+                                //codeGGD.set(lg, gedge, gedge, parents);
                                 initialsGGDs.put(gedge, codeGGD);
                                 initials.put(gedge, code);
                             }
@@ -273,54 +290,21 @@ public class GGDSearcher<NodeType, EdgeType>
         }
     }
 
-    public Set<GGDLatticeNode<NodeType,EdgeType>> addFirstNode(Collection<SingleLabelGGDLatticeNode<NodeType, EdgeType>> setOfNodes, ArrayList<Integer> sortedFreqLabels, Graph singleGraph, HashMap<Integer, HashSet<Integer>> nonCands){
-        Set<GGDLatticeNode<NodeType, EdgeType>> set = new HashSet<>();
-        for(SingleLabelGGDLatticeNode<NodeType,EdgeType> newNode: setOfNodes) {
-            GGDLatticeNode<NodeType, EdgeType> newLatticeNode = new GGDLatticeNode<NodeType, EdgeType>(sortedFreqLabels, singleGraph, nonCands);
-            HashSet<VerticesPattern<NodeType, NodeType>> verticesSet = new HashSet<>();
-            String labelCode = PropertyGraph.getInstance().searchLabelCode(newNode.getLabel());
-            VerticesPattern<NodeType, NodeType> vertex = new VerticesPattern<NodeType, NodeType>((NodeType) labelCode, (NodeType) "0");
-            verticesSet.add(vertex);
-            newLatticeNode.pattern.setVertices(verticesSet);
-            newLatticeNode.query.gp = newLatticeNode.pattern;
-            //newLatticeNode.query.pg = newNode.getPg();
-            List<DifferentialConstraint> cons = new ArrayList<>();
-            cons.add(newNode.getDiffConstraints());
-            //newLatticeNode.setConstraintSet(cons);
-            if (newNode.getDiffConstraints() == null) {
-                HashMap<String,HashMap<String, String>> nodes = newNode.getPg().getVerticesProperties_Id().get(newNode.getLabel());
-                for (String  n : nodes.keySet()) {
-                    Embedding emb = new Embedding(newLatticeNode.pattern);
-                    emb.nodes.put("0", nodes.get(n));
-                    newLatticeNode.query.embeddings.add(emb);
-                }
-            } else {
-                for (Tuple4<String> tuple : newNode.getDiffConstraints().tuplesOfThisConstraint) {
-                    Embedding emb = new Embedding(newLatticeNode.pattern);
-                    String id = tuple.v2;
-                    HashMap<String, String> node = newNode.getPg().getNode(id, newNode.getLabel());
-                    emb.nodes.put("0", node);
-                    newLatticeNode.query.embeddings.add(emb);
-                }
-            }
-            set.add(newLatticeNode);
-        }
-        return set;
-    }
-
     public Set<GGDLatticeNode<NodeType,EdgeType>> addFirstNode_AG(Collection<SingleLabelGGDLatticeNode<NodeType, EdgeType>> setOfNodes, ArrayList<Integer> sortedFreqLabels, Graph singleGraph, HashMap<Integer, HashSet<Integer>> nonCands){
         Set<GGDLatticeNode<NodeType, EdgeType>> set = new HashSet<>();
         for(SingleLabelGGDLatticeNode<NodeType,EdgeType> newNode: setOfNodes) {
             GGDLatticeNode<NodeType, EdgeType> newLatticeNode = new GGDLatticeNode<NodeType, EdgeType>(sortedFreqLabels, singleGraph, nonCands);
             HashSet<VerticesPattern<NodeType, NodeType>> verticesSet = new HashSet<>();
+            System.out.println("new node label" + newNode.getLabel());
             String labelCode = PropertyGraph.getInstance().searchLabelCode(newNode.getLabel());
+            System.out.println("label code:" + labelCode);
             VerticesPattern<NodeType, NodeType> vertex = new VerticesPattern<NodeType, NodeType>((NodeType) labelCode, (NodeType) "0");
-            //VerticesPattern<NodeType, NodeType> vertex = new VerticesPattern<NodeType, NodeType>((NodeType) newNode.getLabel(), (NodeType) "0");
             verticesSet.add(vertex);
             newLatticeNode.pattern.setVertices(verticesSet);
             newLatticeNode.query.gp = newLatticeNode.pattern;
             if (newNode.getDiffConstraints() == null) {
-                //HashMap<String,HashMap<String, String>> nodes = newNode.getPg().getVerticesProperties_Id().get(newNode.getLabel());
+                System.out.println(this.propertyGraph.getVerticesProperties_Id().keySet());
+                System.out.println(newNode.getLabel());
                 Set<String> nodeIds = this.propertyGraph.getVerticesProperties_Id().get(newNode.getLabel()).keySet();
                 AnswerGraph<NodeType, EdgeType> ag = new AnswerGraph<>(newLatticeNode.query.gp);
                 ag.addNodesOfVariables("0", nodeIds);
@@ -350,48 +334,32 @@ public class GGDSearcher<NodeType, EdgeType>
         Set<GGDLatticeNode<NodeType,EdgeType>> firstSet = addFirstNode_AG(firstLevelSingleLabel,  this.sortedFrequentLabels, this.singleGraph, null);
         this.graphPatternIndex.addAllNodes(firstSet);
         Integer sampleRateSizeEmbeddings = freqThreshold.intValue() + 100;
-        GGDRecursiveStrategySet_AG<NodeType, EdgeType> rs = new GGDRecursiveStrategySet_AG<NodeType, EdgeType>(this.graphPatternIndex, initialSet, sampleRateSizeEmbeddings);
+        rs = new GGDRecursiveStrategySet_AG<NodeType, EdgeType>(this.graphPatternIndex, initialSet, sampleRateSizeEmbeddings);
         result= (ArrayList<HPListGraph<NodeType, EdgeType>>)rs.search(algo,this.freqThreshold.intValue());
         resultingGGDs.addAll(rs.result);
     }
 
-    private int getNumOfDistinctLabels(HPListGraph<NodeType, EdgeType> list)
-    {
-        HashSet<Integer> difflabels= new HashSet<Integer>();
-        for (int i = 0; i < list.getNodeCount(); i++)
-        {
-            int label= (Integer)list.getNodeLabel(i);
-            if(!difflabels.contains(label))
-                difflabels.add(label);
-        }
-
-        return difflabels.size();
+    public void search_NoAG() throws CloneNotSupportedException, IOException {
+        GGDAlgorithm<NodeType, EdgeType> algo = new GGDAlgorithm<NodeType, EdgeType>();
+        algo.setInitials(initials);
+        algo.setInitialsGGDs(initialsGGDs);
+        algo.setInitialLattice((List<SingleLabelGGDLatticeNode<NodeType, EdgeType>>) firstLevelSingleLabel);
+        System.out.println("First level size:" + firstLevelSingleLabel.size());
+        Set<GGDLatticeNode<NodeType,EdgeType>> firstSet = addFirstNode_AG(firstLevelSingleLabel,  this.sortedFrequentLabels, this.singleGraph, null);
+        this.graphPatternIndex.addAllNodes(firstSet);
+        //firstSet.addAll(initialSet);
+        Integer sampleRateSizeEmbeddings = freqThreshold.intValue() + 100;
+        rs = new GGDRecursiveStrategySet_AG<NodeType, EdgeType>(this.graphPatternIndex, initialSet, sampleRateSizeEmbeddings);
+        result= (ArrayList<HPListGraph<NodeType, EdgeType>>)rs.search_noAG(algo,this.freqThreshold.intValue());
+        resultingGGDs.addAll(rs.result);
     }
 
-    public void transformGGDs(Set<Tuple<Tuple<GGDLatticeNode<NodeType, EdgeType>, GGDLatticeNode<NodeType, EdgeType>>, Double>> rs){
-        for(Tuple<Tuple<GGDLatticeNode<NodeType, EdgeType>, GGDLatticeNode<NodeType,EdgeType>>,Double> tuple: rs){
-            GGDLatticeNode<NodeType, EdgeType> source = tuple.x.x;
-            GGDLatticeNode<NodeType, EdgeType> target = tuple.x.y;
-            GraphPattern<NodeType, EdgeType> gpSource = new GraphPattern<NodeType, EdgeType>();
-            gpSource.setGraphPatternWithLabels(source.getHPlistGraph(), this.propertyGraph.getLabelCodes());
-            GraphPattern<NodeType, EdgeType> gpTarget = new GraphPattern<NodeType, EdgeType>();
-            gpTarget.setGraphPatternWithLabels(target.getHPlistGraph(), this.propertyGraph.getLabelCodes());
-            List<Constraint> sourceCons = getConstraints_V2(source.getConstraints());//.getConstraintSet());//source.getConstraintSet().iterator().next().constraints;//new ArrayList<Constraint>();
-            List<Constraint> targetCons = getConstraints_V2(target.getConstraints());//target.getConstraintSet().iterator().next().constraints;//new ArrayList<Constraint>();
-            List<GraphPattern<NodeType, EdgeType>> listSource = new ArrayList<GraphPattern<NodeType, EdgeType>>();
-            listSource.add(gpSource);
-            List<GraphPattern<NodeType, EdgeType>> listTarget = new ArrayList<GraphPattern<NodeType, EdgeType>>();
-            listTarget.add(gpTarget);
-            resultingGGDs.add(new GGD(listSource, sourceCons, listTarget, targetCons, tuple.y, 0, 0, null, null));
-        }
+    public GGDRecursiveStrategySet_AG<NodeType, EdgeType> getRs() {
+        return rs;
     }
 
-    public List<Constraint> getConstraints_V2(DifferentialConstraint diffCons){
-        if(diffCons.constraints.isEmpty()){
-            return new ArrayList<Constraint>();
-        }else{
-            return diffCons.constraints;
-        }
+    public void setRs(GGDRecursiveStrategySet_AG<NodeType, EdgeType> rs) {
+        this.rs = rs;
     }
 
 }

@@ -1,10 +1,10 @@
-package main.java.grami_directed_subgraphs.Dijkstra;
+package grami_directed_subgraphs.Dijkstra;
 
 //TODO change the distances and all functions to be triangular !!
 
-import main.java.grami_directed_subgraphs.dataStructures.Graph;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.grami_directed_subgraphs.dataStructures.IntIterator;
+import grami_directed_subgraphs.dataStructures.Graph;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import grami_directed_subgraphs.dataStructures.IntIterator;
 
 import java.util.ArrayList;
 import java.util.List;

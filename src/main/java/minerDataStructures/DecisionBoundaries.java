@@ -1,4 +1,4 @@
-package main.java.minerDataStructures;
+package minerDataStructures;
 
 public class DecisionBoundaries {
 

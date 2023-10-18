@@ -12,7 +12,7 @@
  *   EPL: http://www.eclipse.org/org/documents/epl-v10.php
  *   See the LICENSE file in the project's top-level directory for details.
  */
-package main.java.grami_directed_subgraphs.dataStructures;
+package grami_directed_subgraphs.dataStructures;
 
 import java.io.Serializable;
 
@@ -29,7 +29,7 @@ import java.io.Serializable;
  *            .equals(..))
  */
 public class GSpanExtension<NodeType, EdgeType> implements
-		Extension<NodeType, EdgeType>, Serializable {
+        Extension<NodeType, EdgeType>, Serializable {
 
 	/**
 	 * 
@@ -38,7 +38,7 @@ public class GSpanExtension<NodeType, EdgeType> implements
 
 	public GSpanEdge<NodeType, EdgeType> edge;
 
-	public  DFSCode frag;
+	public DFSCode frag;
 	
 	/** used for the pool */
 	transient GSpanExtension<NodeType, EdgeType> next;

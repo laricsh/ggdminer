@@ -1,8 +1,8 @@
-package main.java.GGD;
+package ggdBase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import main.java.grami_directed_subgraphs.dataStructures.HPListGraph;
-import main.java.minerDataStructures.Tuple;
+import grami_directed_subgraphs.dataStructures.HPListGraph;
+import minerDataStructures.Tuple;
 
 import java.util.*;
 
@@ -390,10 +390,6 @@ public class GraphPattern<NodeType, EdgeType> {
             String nodeALabel = labelCodes.get(Integer.valueOf(nodeALabel_tmp));
             String nodeBLabel = labelCodes.get(Integer.valueOf(nodeBLabel_tmp));
             String edgeLabel = labelCodes.get(Integer.valueOf(edgeLabel_tmp));
-            //System.out.println("nodeAlabel" + nodeALabel + " nodeBLabel" + nodeBLabel + "edge:" + edgeVar);
-            //double edgeLabel = fragmentGraph.getEdgeLabel(edge);
-            //double nodeALabel = fragmentGraph.getNodeLabel(nodeA);
-            //double nodeBLabel = fragmentGraph.getNodeLabel(nodeB);
             if(direction == 1){
                 EdgesPattern<NodeType, EdgeType> edgesPattern = new EdgesPattern(edgeLabel, edgeVar, nodeALabel, nodeA, nodeBLabel, nodeB);
                 addEdge(edgesPattern);
@@ -402,15 +398,7 @@ public class GraphPattern<NodeType, EdgeType> {
                 addEdge(edgesPattern);
             }
             VerticesPattern<NodeType, NodeType> vertexPatternA = new VerticesPattern(nodeALabel, nodeA);
-            /*myNode nodea = this.pg.graph.getNode(nodeA);
-            Tuple<Integer,Integer> tuple = new Tuple<Integer, Integer>(nodea.getLabel(), nodeA);
-            List<HashMap<String, String>> nodes = findNodeOfThisId(nodea);
-            addNodes(tuple, nodes);*/
             VerticesPattern<NodeType, NodeType> vertexPatternB = new VerticesPattern(nodeBLabel, nodeB);
-            //myNode nodeb = this.pg.graph.getNode(nodeB);
-            /*Tuple<Integer,Integer> tupleb = new Tuple<Integer, Integer>(nodeb.getLabel(), nodeB);
-            List<HashMap<String, String>> nodesb = findNodeOfThisId(nodeb);
-            addNodes(tupleb, nodesb);*/
             addVertex(vertexPatternA);
             addVertex(vertexPatternB);
         }
@@ -435,7 +423,6 @@ public class GraphPattern<NodeType, EdgeType> {
             String nodeALabel = fragmentGraph.getNodeLabel(nodeA).toString();
             String nodeBLabel = fragmentGraph.getNodeLabel(nodeB).toString();
             String edgeLabel = fragmentGraph.getEdgeLabel(edge).toString();
-            //System.out.println("nodeAlabel" + nodeALabel + " nodeBLabel" + nodeBLabel + "edge:" + edge);
             String edgeVar = getEdgeVariableLetter(i);
             if(direction == 1){
                 EdgesPattern<NodeType, EdgeType> edgesPattern = new EdgesPattern(edgeLabel, edgeVar, nodeALabel, nodeA, nodeBLabel, nodeB);

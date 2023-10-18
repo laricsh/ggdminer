@@ -1,10 +1,10 @@
-package main.java.minerUtils;
+package minerUtils;
 
-import main.java.GGD.GGD;
-import main.java.GGD.GraphPattern;
-import main.java.minerDataStructures.Embedding;
-import main.java.minerDataStructures.PropertyGraph;
-import main.java.minerDataStructures.Tuple;
+import ggdBase.GGD;
+import ggdBase.GraphPattern;
+import minerDataStructures.Embedding;
+import minerDataStructures.PropertyGraph;
+import minerDataStructures.Tuple;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import java.util.*;
