@@ -1,11 +1,15 @@
 ----Source Graph Pattern:----
+Node:2 Label:DBLPVenues
 Node:0 Label:DBLPPapers
+Node:1 Label:DBLPAuthors
+Edge: A Label:DBLPhasAuthors Source:0 Target:1
+Edge: B Label:DBLPpublishedIn Source:0 Target:2
 ---Source Constraints-----
 --------Target Graph Pattern--------
-Node:1_t Label:DBLPAuthors
 Node:2_t Label:DBLPAuthors
 Node:0 Label:DBLPPapers
-Edge: A_t Label:DBLPhasAuthors Source:0 Target:1_t
+Node:1 Label:DBLPAuthors
 Edge: B_t Label:DBLPhasAuthors Source:0 Target:2_t
+Edge: A Label:DBLPhasAuthors Source:0 Target:1
 ------Target Cons-----
-############# - CONFIDENCE VALUE: 1.0 - ######################### - NUMBER OF SOURCE MATCHES: 0 - ######################### - NUMBER OF TARGET MATCHES: 0 - ############
+############# - CONFIDENCE VALUE: 1.0 - ######################### - NUMBER OF SOURCE MATCHES: 81760 - ######################### - NUMBER OF TARGET MATCHES: 410703 - ############

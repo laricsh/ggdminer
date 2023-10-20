@@ -1,0 +1,9 @@
+----Source Graph Pattern:----
+Node:0 Label:Person
+---Source Constraints-----
+--------Target Graph Pattern--------
+Node:0_t Label:Article
+Node:0 Label:Person
+Edge: A_t Label:MENTIONS Source:0_t Target:0
+------Target Cons-----
+############# - CONFIDENCE VALUE: 1.0 - ######################### - NUMBER OF SOURCE MATCHES: 15613 - ######################### - NUMBER OF TARGET MATCHES: 361215 - ############

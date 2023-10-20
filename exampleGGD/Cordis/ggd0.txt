@@ -1,13 +1,15 @@
 ----Source Graph Pattern:----
-Node:0 Label:CordisPaper
+Node:1 Label:CordisKeywords
+Node:2 Label:CordisKeywords
+Node:0 Label:CordisProject
+Edge: A Label:CordisisAbout Source:0 Target:1
+Edge: B Label:CordisisAbout Source:0 Target:2
 ---Source Constraints-----
 --------Target Graph Pattern--------
-Node:3_t Label:CordisPaper
-Node:1_t Label:CordisAuthor
-Node:0 Label:CordisPaper
-Node:2_t Label:CordisJournal
-Edge: A_t Label:CordishasAuthor Source:0 Target:1_t
-Edge: C_t Label:CordispublishedIn Source:3_t Target:2_t
-Edge: B_t Label:CordispublishedIn Source:0 Target:2_t
+Node:0 Label:CordisProject
+Node:2_t Label:CordisTopics
+Node:0_t Label:CordisOrganization
+Edge: B_t Label:CordisprojAbout Source:0 Target:2_t
+Edge: A_t Label:CordispartOf Source:0_t Target:0
 ------Target Cons-----
-############# - CONFIDENCE VALUE: 1.0 - ######################### - NUMBER OF SOURCE MATCHES: 0 - ######################### - NUMBER OF TARGET MATCHES: 0 - ############
+############# - CONFIDENCE VALUE: 0.9929749346738744 - ######################### - NUMBER OF SOURCE MATCHES: 2019483 - ######################### - NUMBER OF TARGET MATCHES: 112495 - ############
